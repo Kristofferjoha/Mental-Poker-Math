@@ -1,54 +1,35 @@
-use crate::card::{Card, Suit};
+use crate::poker_logic::card::{Card, Suit};
 use itertools::Itertools;
 use serde::{Serialize, Deserialize};
 use std::hash::Hash;
 
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum HandCategory {
-    HighCard,
-    OnePair,
-    TwoPair,
-    ThreeOfAKind,
-    Straight,
-    Flush,
-    FullHouse,
-    FourOfAKind,
-    StraightFlush,
-    RoyalFlush,
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum HandRank {
-    HighCard(Vec<u8>), // order by high card 
+    /// No combination; ranked by highest cards.
+    HighCard(Vec<u8>),
+    /// One pair plus three kickers.
     OnePair(u8, Vec<u8>),
+    /// Two pairs and one kicker.
     TwoPair(u8, u8, u8),
-    ThreeOfAKind(u8, Vec<u8>), //trips and kickers
+    /// Three of a kind and two kickers.
+    ThreeOfAKind(u8, Vec<u8>),
+    /// Five sequential ranks. Stored as the high card of the straight.
     Straight(u8),
-    Flush(Vec<u8>), // vector since it can be based on high card
+    /// Five cards of the same suit. Ranked by card values.
+    Flush(Vec<u8>),
+    /// Three of a kind plus a pair.
     FullHouse(u8, u8),
+    /// Four of a kind and one kicker.
     FourOfAKind(u8, u8),
+    /// Straight with all cards of the same suit. Stored as the high card.
     StraightFlush(u8),
+    /// Ace-high straight flush (A-K-Q-J-T of same suit).
     RoyalFlush,
 }
 
-impl HandRank {
-    pub fn to_category(&self) -> HandCategory {
-        match self {
-            HandRank::HighCard(_) => HandCategory::HighCard,
-            HandRank::OnePair(_, _) => HandCategory::OnePair,
-            HandRank::TwoPair(_, _, _) => HandCategory::TwoPair,
-            HandRank::ThreeOfAKind(_, _) => HandCategory::ThreeOfAKind,
-            HandRank::Straight(_) => HandCategory::Straight,
-            HandRank::Flush(_) => HandCategory::Flush,
-            HandRank::FullHouse(_, _) => HandCategory::FullHouse,
-            HandRank::FourOfAKind(_, _) => HandCategory::FourOfAKind,
-            HandRank::StraightFlush(_) => HandCategory::StraightFlush,
-            HandRank::RoyalFlush => HandCategory::RoyalFlush,
-        }
-    }
-}
-
+// Looks at 5 card combinations of the 7 cards (2 on hand, 5 community)
+// returns strongest hand
 pub fn evaluate_hand(cards: &[Card]) -> HandRank {
     cards.iter()
         .combinations(5)
@@ -57,6 +38,7 @@ pub fn evaluate_hand(cards: &[Card]) -> HandRank {
         .unwrap()
 }
 
+// 
 fn classify_hand(hand: &[Card]) -> HandRank {
     let mut ranks: Vec<u8> = hand.iter().map(|c| c.rank.to_u8()).collect();
     let suits: Vec<Suit> = hand.iter().map(|c| c.suit).collect();

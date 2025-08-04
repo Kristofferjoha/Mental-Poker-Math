@@ -1,4 +1,3 @@
-use std::fmt;
 use serde::{Serialize, Deserialize};
 use strum_macros::EnumIter;
 
@@ -10,6 +9,7 @@ pub enum Suit {
     Spades,
 }
 
+// repr helps with u8 conversion
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, EnumIter)]
 #[repr(u8)]
 pub enum Rank {
@@ -34,6 +34,7 @@ pub struct Card {
     pub rank: Rank,
 }
 
+// Converting rank to u8, used for hand evals
 impl Rank {
     pub const fn to_u8(self) -> u8 {
         self as u8

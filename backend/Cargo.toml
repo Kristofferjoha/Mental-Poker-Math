@@ -1,16 +1,21 @@
 [package]
 name = "backend"
 version = "0.1.0"
-edition = "2024"
+edition = "2021" # Sticking to 2021 is standard and fine
 
 [dependencies]
-axum = "0.8.4"
-hyper = { version = "1.6.0", features = ["full"] }
-serde_json = "1.0.141"
-tokio = { version = "1.47", features = ["full"] }
-tower-http = { version = "0.6.6", features = ["cors"] }
-tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+# Web server dependencies
+axum = "0.7" # Using 0.7 as it's very stable, 0.8 is fine too
+tokio = { version = "1.37", features = ["full"] }
+tower-http = { version = "0.5", features = ["cors"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde_json = "1.0"
 
-poker-logic = { path = "poker-logic" }
-rayon = "1.10.0"
+# Poker logic dependencies
+itertools = "0.12"
+rand = "0.8"
+rayon = "1.8" 
+serde = { version = "1.0", features = ["derive"] }
+strum = "0.26"
+strum_macros = "0.26"

@@ -6,6 +6,7 @@ pub struct PotEquityProblem {
     pub player_hand: Vec<Card>,
     pub opponent_hand: Vec<Card>,
     pub board: Vec<Card>,
+    pub stage: u8,
     pub pot_size: f32,
     pub bet_to_call: f32,
     pub player_equity: f32,
@@ -25,12 +26,8 @@ pub fn generate_pot_eq_problem() -> PotEquityProblem {
     let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
 
 
-    // hard-coded for now should be random
-    let board = vec![
-        deck.cards.pop().unwrap(), 
-        deck.cards.pop().unwrap(), 
-        deck.cards.pop().unwrap(), 
-    ];
+    let stage = rng.gen_range(0..=3);
+    let board = draw_board(&mut deck, stage);
 
     // Generate random pot and bet sizes
     let pot_size = rng.gen_range(10.0..1000.0);
@@ -52,6 +49,7 @@ pub fn generate_pot_eq_problem() -> PotEquityProblem {
         player_hand,
         opponent_hand,
         board,
+        stage,
         pot_size,
         bet_to_call,
         player_equity: equity_result.equity(),
@@ -63,4 +61,12 @@ pub fn generate_pot_eq_problem() -> PotEquityProblem {
 fn compute_decision(player_equity: f32, bet_to_call: f32, pot_size: f32) -> bool {
     let pot_odds = bet_to_call / (pot_size + bet_to_call);
     player_equity > pot_odds
+}
+
+
+fn draw_board(deck: &mut Deck, stage: u8) -> Vec<Card> {
+    let board_card_counts = [0, 3, 4, 5];
+    (0..board_card_counts[stage as usize])
+        .map(|_| deck.cards.pop().unwrap())
+        .collect()
 }

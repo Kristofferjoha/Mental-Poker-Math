@@ -4,75 +4,74 @@ use crate::poker_logic::{
     hand_evaluator::evaluate_hand,
 };
 use rand::thread_rng;
+use rand::seq::SliceRandom;
+use rayon::prelude::*;
+use std::cmp::Ordering;
 
-// Equity struct, losses not used. Can be removed, keeping for now if needed later.
 pub struct Equity {
     pub wins: u32,
     pub ties: u32,
-    pub losses: u32,
     pub total_sims: u32,
 }
 
-// Calculating equity as a float value
 impl Equity {
     pub fn equity(&self) -> f32 {
         (self.wins as f32 + self.ties as f32 / 2.0) / self.total_sims as f32
     }
 }
 
-// Calculates number of wins, ties, and losses for a given player hand against an opponent hand and board.
-// Optimized using rayon parallelism later.
 pub fn calculate_equity(
     player_hand: &[Card],
     opponent_hand: &[Card],
     board: &[Card],
     num_simulations: u32,
 ) -> Equity {
-    let mut wins = 0;
-    let mut ties = 0;
+    let base_deck = {
+    let mut d = Deck::new();
+    d.remove_cards(player_hand);
+    d.remove_cards(opponent_hand);
+    d.remove_cards(board);
+    d
+};
 
-    for _ in 0..num_simulations {
-        
-        let mut deck = Deck::new();
+let results = (0..num_simulations)
+    .into_par_iter()
+    .map_init(
+        || (thread_rng(), base_deck.clone()),
+        |(rng, deck), _| {
+            let mut local_deck = deck.clone();
+            local_deck.cards.shuffle(rng);
 
-        deck.remove_cards(player_hand);
-        deck.remove_cards(opponent_hand);
-        deck.remove_cards(board);
+            let cards_to_deal = 5 - board.len();
+            let simulated_board: Vec<_> = board.iter()
+                .cloned()
+                .chain(local_deck.cards.iter().take(cards_to_deal).cloned())
+                .collect();
 
-        deck.shuffle(&mut thread_rng());
+            let mut player_hand_buf = [Card::default(); 7];
+            player_hand_buf[..2].copy_from_slice(player_hand);
+            player_hand_buf[2..].copy_from_slice(&simulated_board);
 
-        // Deals remaining cards needed
-        let cards_to_deal = 5 - board.len();
-        let mut simulated_board = board.to_vec();
-        for _ in 0..cards_to_deal {
-            // deal() should probably return Option<Card>, so unwrap or handle
-            simulated_board.push(deck.cards.pop().unwrap()); 
+            let mut opponent_hand_buf = [Card::default(); 7];
+            opponent_hand_buf[..2].copy_from_slice(opponent_hand);
+            opponent_hand_buf[2..].copy_from_slice(&simulated_board);
+
+            let player_rank = evaluate_hand(&player_hand_buf);
+            let opponent_rank = evaluate_hand(&opponent_hand_buf);
+
+            match player_rank.cmp(&opponent_rank) {
+                Ordering::Greater => (1, 0),
+                Ordering::Equal => (0, 1),
+                Ordering::Less => (0, 0),
+            }
         }
+    )
+    .reduce(|| (0, 0), |(w1, t1), (w2, t2)| (w1 + w2, t1 + t2));
 
-        // Evaluates hands
-        // ectend_from_slice is used to add the simulated board to the player and opponent hands.
-        let mut player_full_hand = player_hand.to_vec();
-        player_full_hand.extend_from_slice(&simulated_board);
 
-        let mut opponent_full_hand = opponent_hand.to_vec();
-        opponent_full_hand.extend_from_slice(&simulated_board);
-
-        let player_rank = evaluate_hand(&player_full_hand);
-        let opponent_rank = evaluate_hand(&opponent_full_hand);
-
-        // Compare the results and update counters.
-        use std::cmp::Ordering;
-        match player_rank.cmp(&opponent_rank) {
-            Ordering::Greater => wins += 1,
-            Ordering::Equal => ties += 1,
-            Ordering::Less => (), 
-        }
-    }
-    
     Equity {
-        wins,
-        ties,
-        losses: num_simulations - wins - ties,
+        wins: results.0,
+        ties: results.1,
         total_sims: num_simulations,
     }
 }

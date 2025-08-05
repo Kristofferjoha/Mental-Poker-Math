@@ -28,7 +28,7 @@ pub enum Rank {
     Ace = 14,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Card {
     pub suit: Suit,
     pub rank: Rank,
@@ -38,5 +38,17 @@ pub struct Card {
 impl Rank {
     pub const fn to_u8(self) -> u8 {
         self as u8
+    }
+}
+
+impl Default for Suit {
+    fn default() -> Self {
+        Suit::Spades
+    }
+}
+
+impl Default for Rank {
+    fn default() -> Self {
+        Rank::Ace
     }
 }

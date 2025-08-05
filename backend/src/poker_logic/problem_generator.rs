@@ -29,16 +29,14 @@ pub fn generate_pot_eq_problem() -> PotEquityProblem {
     let stage = rng.gen_range(0..=3);
     let board = draw_board(&mut deck, stage);
 
-    // Generate random pot and bet sizes
-    let pot_size = rng.gen_range(10.0..1000.0);
-    let bet_to_call = rng.gen_range(5.0..pot_size);
+    let pot_size = rng.gen_range(10000.0..100000.0);
+    let bet_to_call = rng.gen_range(5000.0..pot_size);
 
-    // Calculate the equity. (win, ties, losses, and sims)
     let equity_result = equity_calculator::calculate_equity(
         &player_hand,
         &opponent_hand,
         &board,
-        10_000, // Number of simulations
+        10_000, 
     );
 
     let pot_odds = ((bet_to_call / (pot_size + bet_to_call)) * 100.0) / 100.0;

@@ -4,6 +4,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use strum::IntoEnumIterator;
 
+#[derive(Debug, Clone)]
 pub struct Deck {
     pub cards: Vec<Card>,
 }

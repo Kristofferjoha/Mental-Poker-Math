@@ -1,8 +1,10 @@
 use axum::Json;
 use serde::Serialize;
 use crate::poker_logic::{card::Card, problem_generator};
+use tracing::info;
 
-#[derive(Serialize)]
+
+#[derive(Serialize, Debug)]
 pub struct ApiProblemResponse {
     player_hand: Vec<Card>,
     opponent_hand: Vec<Card>,
@@ -29,6 +31,8 @@ pub async fn get_new_problem() -> Json<ApiProblemResponse> {
         pot_odds: (problem.pot_odds * 100.0).round() / 100.0, 
         correct_decision: problem.correct_decision,
     };
+
+    // info!("Generated new problem: {:?}", api_response);
 
     Json(api_response)
 }

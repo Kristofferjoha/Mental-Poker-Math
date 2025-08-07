@@ -19,7 +19,6 @@ pub fn generate_pot_eq_problem() -> PotEquityProblem {
     let mut deck = Deck::new();
     deck.shuffle(&mut rng);
 
-    // Deal hands
     let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
     let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
 
@@ -30,19 +29,17 @@ pub fn generate_pot_eq_problem() -> PotEquityProblem {
     let pot_size = (rng.gen_range(10_000..100_000) / 1000) * 1000;
     let bet_to_call = (rng.gen_range(5_000..pot_size) / 1000) * 1000;
 
-    // Calculate equity
+
     let equity_result = equity_calculator::calculate_equity(
         &player_hand,
         &opponent_hand,
         &board,
         10_000,
     );
-    let player_equity = equity_result.equity(); // already f32
+    let player_equity = equity_result.equity(); 
 
-    // Convert i32 → f32 for pot odds calculation
     let pot_odds = (bet_to_call as f32) / ((pot_size + bet_to_call) as f32);
 
-    // Decision: Call if equity > pot odds
     let correct_decision = player_equity > pot_odds;
 
     PotEquityProblem {

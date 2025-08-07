@@ -7,16 +7,14 @@ pub struct PotEquityProblem {
     pub opponent_hand: Vec<Card>,
     pub board: Vec<Card>,
     pub stage: u8,
-    pub pot_size: f32,
-    pub bet_to_call: f32,
+    pub pot_size: u32,
+    pub bet_to_call: u32,
     pub player_equity: f32,
     pub pot_odds: f32,
     pub correct_decision: bool,
 }
 
 pub fn generate_pot_eq_problem() -> PotEquityProblem {
-
-    // Init deck and shuffle
     let mut rng = thread_rng();
     let mut deck = Deck::new();
     deck.shuffle(&mut rng);
@@ -25,23 +23,27 @@ pub fn generate_pot_eq_problem() -> PotEquityProblem {
     let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
     let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
 
-
     let stage = rng.gen_range(0..=3);
     let board = draw_board(&mut deck, stage);
 
-    let pot_size = rng.gen_range(10000.0..100000.0);
-    let bet_to_call = rng.gen_range(5000.0..pot_size);
+    // nearest 1000 for pot size and bet to call
+    let pot_size = (rng.gen_range(10_000..100_000) / 1000) * 1000;
+    let bet_to_call = (rng.gen_range(5_000..pot_size) / 1000) * 1000;
 
+    // Calculate equity
     let equity_result = equity_calculator::calculate_equity(
         &player_hand,
         &opponent_hand,
         &board,
-        10_000, 
+        10_000,
     );
+    let player_equity = equity_result.equity(); // already f32
 
-    let pot_odds = ((bet_to_call / (pot_size + bet_to_call)) * 100.0) / 100.0;
+    // Convert i32 → f32 for pot odds calculation
+    let pot_odds = (bet_to_call as f32) / ((pot_size + bet_to_call) as f32);
 
-    let answer = compute_decision(equity_result.equity(), bet_to_call, pot_size);
+    // Decision: Call if equity > pot odds
+    let correct_decision = player_equity > pot_odds;
 
     PotEquityProblem {
         player_hand,
@@ -50,16 +52,13 @@ pub fn generate_pot_eq_problem() -> PotEquityProblem {
         stage,
         pot_size,
         bet_to_call,
-        player_equity: equity_result.equity(),
-        pot_odds, 
-        correct_decision: answer,
+        player_equity,
+        pot_odds,
+        correct_decision,
     }
 }
 
-fn compute_decision(player_equity: f32, bet_to_call: f32, pot_size: f32) -> bool {
-    let pot_odds = bet_to_call / (pot_size + bet_to_call);
-    player_equity > pot_odds
-}
+
 
 
 fn draw_board(deck: &mut Deck, stage: u8) -> Vec<Card> {

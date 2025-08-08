@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import Card from '$lib/components/deck.svelte';
   import SessionReviewItem from '$lib/components/SessionReviewItem.svelte';
 
@@ -56,7 +56,7 @@
     }
   }
 
-  function handleDecision(userChoseToCall) {
+  async function handleDecision(userChoseToCall) {
     if (!currentProblem) return;
 
     const isCorrect = userChoseToCall === currentProblem.correct_decision;
@@ -74,7 +74,9 @@
       score -= 1;
       feedbackClass = 'wrong-flash';
     }
-    
+
+    await tick(); // wait for DOM to update
+
     nextProblem();
 
     setTimeout(() => {

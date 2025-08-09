@@ -32,7 +32,7 @@ pub async fn get_new_problem() -> Json<ApiProblemResponse> {
         correct_decision: problem.correct_decision,
     };
 
-    // info!("Generated new problem: {:?}", api_response);
+    info!("Generated new problem: {:?}", api_response);
 
     Json(api_response)
 }

@@ -1,5 +1,4 @@
 use crate::poker_logic::card::{Card, Suit};
-use itertools::Itertools;
 use serde::{Serialize, Deserialize};
 use std::hash::Hash;
 
@@ -30,10 +29,40 @@ pub enum HandRank {
 
 // Looks at 5 card combinations of the 7 cards (2 on hand, 5 community)
 // returns strongest hand
-pub fn evaluate_hand(cards: &[Card]) -> HandRank {
-    cards.iter()
-        .combinations(5)
-        .map(|combo| classify_hand(&combo.into_iter().cloned().collect::<Vec<_>>()))
+
+const COMBINATIONS: [[usize; 5]; 21] = [
+    [0, 1, 2, 3, 4],
+    [0, 1, 2, 3, 5],
+    [0, 1, 2, 3, 6],
+    [0, 1, 2, 4, 5],
+    [0, 1, 2, 4, 6],
+    [0, 1, 2, 5, 6],
+    [0, 1, 3, 4, 5],
+    [0, 1, 3, 4, 6],
+    [0, 1, 3, 5, 6],
+    [0, 1, 4, 5, 6],
+    [0, 2, 3, 4, 5],
+    [0, 2, 3, 4, 6],
+    [0, 2, 3, 5, 6],
+    [0, 2, 4, 5, 6],
+    [0, 3, 4, 5, 6],
+    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 6],
+    [1, 2, 3, 5, 6],
+    [1, 2, 4, 5, 6],
+    [1, 3, 4, 5, 6],
+    [2, 3, 4, 5, 6],
+];
+
+pub fn evaluate_hand(cards: &[Card; 7]) -> HandRank {
+    COMBINATIONS.iter()
+        .map(|indices| {
+            let mut hand = [Card::default(); 5];
+            for i in 0..5 {
+                hand[i] = cards[indices[i]];
+            }
+            classify_hand(&hand)
+        })
         .max()
         .unwrap()
 }

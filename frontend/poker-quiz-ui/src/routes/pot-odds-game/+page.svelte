@@ -261,22 +261,59 @@
     margin-right: auto;
   }
   .score {
-    padding: 0.2rem 0.5rem;
-    border-radius: 5px;
-    transition: background-color 0.1s, transform 0.1s;
+  position: relative; /* Needed for pseudo-element positioning */
+  z-index: 1;
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  transition: transform 0.1s; /* Keep the transform transition */
   }
+
+
+  .score::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 5px;
+    opacity: 0;
+    z-index: -1; /* Place it behind the text */
+  }
+
   .correct-flash {
     animation: flash-green 0.3s ease-out;
   }
   .wrong-flash {
     animation: flash-red 0.3s ease-out;
   }
+
   @keyframes flash-green {
-    0% { background-color: #28a745; color: white; transform: scale(1.2); }
-    100% { background-color: transparent; color: initial; transform: scale(1); }
+    0% { transform: scale(1.2); }
+    40% { /* Let the color flash peak and hold briefly */ }
+    100% { transform: scale(1); }
   }
-  @keyframes flash-red {
-    0% { background-color: #dc3545; color: white; transform: scale(1.2); }
-    100% { background-color: transparent; color: initial; transform: scale(1); }
+
+  /* Animate the ::before pseudo-element's background and opacity */
+  .correct-flash::before {
+    background-color: #28a745;
+    animation: flash-opacity 0.3s ease-out;
+  }
+
+  .wrong-flash::before {
+    background-color: #dc3545;
+    animation: flash-opacity 0.3s ease-out;
+  }
+
+  /* A single animation for the opacity flash */
+  @keyframes flash-opacity {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* We don't need the color change on the text itself, but if you want it: */
+  @keyframes flash-red { /* or flash-green */
+    0% { color: white; transform: scale(1.2); }
+    100% { color: initial; transform: scale(1); }
   }
 </style>

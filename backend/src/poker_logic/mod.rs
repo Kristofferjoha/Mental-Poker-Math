@@ -3,3 +3,5 @@ pub mod deck;
 pub mod equity_calculator;
 pub mod hand_evaluator;
 pub mod problem_generator;
+pub mod api;
+pub mod pure_equity_gen;

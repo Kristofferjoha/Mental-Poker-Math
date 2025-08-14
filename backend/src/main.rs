@@ -1,14 +1,26 @@
-mod api;
 mod poker_logic;
+mod app_state; 
 
-use axum::{routing::get, Router};
+use app_state::AppState;
+use poker_logic::api;
+
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    tracing::info!("Starting server setup...");
+    let app_state = AppState {
+        pot_eq_store: Arc::new(Mutex::new(HashMap::new())),
+        pure_eq_store: Arc::new(Mutex::new(HashMap::new())),
+    };
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -16,26 +28,19 @@ async fn main() {
         .allow_headers(Any);
 
     let app = Router::new()
-        .route("/api/new-problem", get(api::get_new_problem))
+        .route("/api/get-problem", get(api::get_new_problem))
+        .route("/api/check-answer", post(api::check_answer))
+        .route("/api/pure-eq-get-problem", get(api::get_pure_eq_problem))
+        .route("/api/pure-eq-check-answer", post(api::pure_eq_check_answer))
+        .with_state(app_state)
         .layer(cors);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    tracing::info!("Attempting to bind to {}", addr);
-
-    let listener = match tokio::net::TcpListener::bind(addr).await {
-        Ok(listener) => {
-            tracing::info!("Successfully bound to {}", addr);
-            listener
-        }
-        Err(e) => {
-            tracing::error!("Failed to bind to {}: {}", addr, e);
-            return;
-        }
-    };
-
     tracing::info!("Listening on http://{}", addr);
 
-    if let Err(e) = axum::serve(listener, app).await {
-        tracing::error!("Server error: {}", e);
-    }
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+
+    axum::serve(listener, app)
+        .await
+        .unwrap_or_else(|err| tracing::error!("Server error: {}", err));
 }

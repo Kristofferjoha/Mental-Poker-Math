@@ -1,11 +1,11 @@
 [package]
 name = "backend"
 version = "0.1.0"
-edition = "2021" # Sticking to 2021 is standard and fine
+edition = "2021"
 
 [dependencies]
 # Web server dependencies
-axum = "0.7" # Using 0.7 as it's very stable, 0.8 is fine too
+axum = "0.7"
 tokio = { version = "1.37", features = ["full"] }
 tower-http = { version = "0.5", features = ["cors"] }
 tracing = "0.1"
@@ -19,3 +19,4 @@ rayon = "1.8"
 serde = { version = "1.0", features = ["derive"] }
 strum = "0.26"
 strum_macros = "0.26"
+uuid = { version = "1.17.0", features = ["v4", "serde"] }

@@ -3,18 +3,16 @@ use rand::{thread_rng, Rng};
 
 // Problem struct for pot-equity questions
 #[derive(Clone, Debug)]
-pub struct PotEquityProblem {
+pub struct PureEqEquityProblem {
     pub player_hand: Vec<Card>,
     pub opponent_hand: Vec<Card>,
     pub board: Vec<Card>,
-    pub pot_size: u32,
-    pub bet_to_call: u32,
     pub player_equity: f32,
-    pub pot_odds: f32,
-    pub correct_decision: bool,
+    pub lower_bound_equity: f32,
+    pub upper_bound_equity: f32,
 }
 
-pub fn generate_pot_eq_problem() -> PotEquityProblem {
+pub fn generate_pure_eq_problem() -> PureEqEquityProblem {
     let mut rng = thread_rng();
     let mut deck = Deck::new();
     deck.shuffle(&mut rng);
@@ -25,9 +23,6 @@ pub fn generate_pot_eq_problem() -> PotEquityProblem {
     let stage = rng.gen_range(0..=3);
     let board = draw_board(&mut deck, stage);
 
-    // nearest 1000 for pot size and bet to call
-    let pot_size = (rng.gen_range(10_000..100_000) / 1000) * 1000;
-    let bet_to_call = (rng.gen_range(5_000..pot_size) / 1000) * 1000;
 
 
     let equity_result = equity_calculator::calculate_equity(
@@ -36,21 +31,20 @@ pub fn generate_pot_eq_problem() -> PotEquityProblem {
         &board,
         10_000,
     );
-    let player_equity = equity_result.equity(); 
 
-    let pot_odds = (bet_to_call as f32) / ((pot_size + bet_to_call) as f32);
+    let player_equity = equity_result.equity()*100.0; 
+    let tolerance = 2.0; 
+    let lower_bound_equity = player_equity-tolerance;
+    let upper_bound_equity = player_equity+tolerance;
 
-    let correct_decision = player_equity > pot_odds;
 
-    PotEquityProblem {
+    PureEqEquityProblem {
         player_hand,
         opponent_hand,
         board,
-        pot_size,
-        bet_to_call,
         player_equity,
-        pot_odds,
-        correct_decision,
+        lower_bound_equity,
+        upper_bound_equity,
     }
 }
 

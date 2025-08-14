@@ -8,15 +8,11 @@
       <p>Train your intuitive feel for hand strength vs. pot odds.</p>
     </a>
     
-    <a href="#" class="game-link disabled">
+    <a href="/pure-eq-game" class="game-link">
       <h2>Game 2: +EV Decision (Coming Soon)</h2>
       <p>A pure math quiz on expected value.</p>
     </a>
 
-    <a href="#" class="game-link disabled">
-      <h2>Game 3: Calculate Odds (Coming Soon)</h2>
-      <p>Calculate the exact pot odds required to call.</p>
-    </a>
   </nav>
 </main>
 
@@ -44,10 +40,6 @@
   .game-link:hover {
     transform: scale(1.02);
     border-color: #007bff;
-  }
-  .game-link.disabled {
-    opacity: 0.5;
-    pointer-events: none;
   }
   h2 {
     margin: 0 0 0.5rem 0;

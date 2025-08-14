@@ -1,132 +1,165 @@
 <script>
-  import { onMount, onDestroy, tick } from 'svelte';
-  import Card from '$lib/components/deck.svelte';
-  import SessionReviewItem from '$lib/components/SessionReviewItem.svelte';
-  import PokerTable from '$lib/components/PokerTable.svelte'; 
+    import { onMount, onDestroy, tick } from 'svelte';
+    import Card from '$lib/components/deck.svelte';
+    import SessionReviewItem from '$lib/components/SessionReviewItem.svelte';
+    import PokerTable from '$lib/components/PokerTable.svelte'; 
 
-  const STACK_SIZE = 25;
-  let problemStack = [];
-  let currentProblem = null;
-  let error = null;
+    const STACK_SIZE = 25;
+    let problemStack = [];
+    let currentProblem = null;
+    let error = null;
 
-  let gameState = 'ready'; 
-  let score = 0;
-  let timeLeft = 120;
-  let timerInterval = null;
-  let feedback = '';
+    let gameState = 'ready'; 
+    let score = 0;
+    let timeLeft = 10;
+    let timerInterval = null;
+    let feedback = '';
 
-  let sessionHistory = [];
+    let sessionHistory = [];
 
-  let feedbackClass = '';
+    let feedbackClass = '';
 
-  async function fetchProblem() {
-    try {
-      const res = await fetch('/api/new-problem');
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      return await res.json();
-    } catch (e) {
-      error = e.message;
-      return null;
+    async function fetchProblem() {
+        try {
+            const res = await fetch('/api/get-problem');
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            return await res.json();
+        } catch (e) {
+            error = e.message;
+            return null;
+        }
     }
-  }
 
-  async function refillStack() {
-    while (problemStack.length < STACK_SIZE && !error) {
-      const prob = await fetchProblem();
-      if (prob) {
-        problemStack = [...problemStack, prob];
-        console.log(`Stack size: ${problemStack.length}`);
-      } else {
-        break; 
-      }
+    let isRefilling = false;
+
+    async function refillStack() {
+        if (isRefilling) return;
+        isRefilling = true;
+
+        while (problemStack.length < STACK_SIZE && !error) {
+            const prob = await fetchProblem();
+            if (prob) {
+                problemStack = [...problemStack, prob];
+                console.log(`Stack size: ${problemStack.length}`);
+            } else {
+                break;
+            }
+        }
+
+        isRefilling = false;
     }
-  }
 
-  onMount(() => {
-    refillStack();
-  });
-
-  function nextProblem() {
-    feedback = '';
-    if (problemStack.length > 0) {
-      currentProblem = problemStack[0];
-      problemStack = problemStack.slice(1);
-      refillStack(); 
-    } else {
-      fetchProblem().then(prob => currentProblem = prob);
-    }
-  }
-
-  async function handleDecision(userChoseToCall) {
-    if (!currentProblem) return;
-
-    const isCorrect = userChoseToCall === currentProblem.correct_decision;
-
-    sessionHistory.push({
-      problem: currentProblem,
-      userDecision: userChoseToCall,
-      isCorrect: isCorrect
+    onMount(() => {
+        refillStack();
     });
 
-    if (isCorrect) {
-      score += 1;
-      feedbackClass = 'correct-flash';
-    } else {
-      score -= 1;
-      feedbackClass = 'wrong-flash';
+    function nextProblem() {
+        feedback = '';
+        if (problemStack.length > 0) {
+            currentProblem = problemStack[0];
+            problemStack = problemStack.slice(1);
+            refillStack(); 
+        } else {
+            fetchProblem().then(prob => currentProblem = prob);
+        }
     }
 
-    await tick(); // wait for DOM to update
+    async function handleDecision(userChoseToCall) {
+        if (!currentProblem) return;
 
-    nextProblem();
+        try {
+            const res = await fetch('/api/check-answer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    problemId: currentProblem.problem_id,
+                    decision: userChoseToCall,
+                }),
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            const data = await res.json();
 
-    setTimeout(() => {
-      feedbackClass = '';
-    }, 300);
-  }
+            const isCorrect = data.isCorrect;
+            const correctDecision = data.correctDecision;
+            const playerEquity = data.playerEquity;
+            const potOdds = data.potOdds;
+            console.log(`Player equity: ${playerEquity}, Pot odds: ${potOdds}`);
 
-  function startGame() {
-    clearInterval(timerInterval);
-    sessionHistory =[];
-    score = 0;
-    timeLeft = 120;
-    gameState = 'playing';
-    nextProblem();
+            sessionHistory.push({
+                problem: {
+                    ...currentProblem,
+                    player_equity: playerEquity,
+                    pot_odds: potOdds,
+                    correct_decision: correctDecision,
+                },
+                userDecision: userChoseToCall,
+                correctDecision,
+                isCorrect,
+            });
 
-    timerInterval = setInterval(() => {
-      timeLeft -= 1;
-      if (timeLeft <= 0) {
-        endGame();
-      }
-    }, 1000);
-  }
+            if (isCorrect) {
+                score += 1;
+                feedbackClass = 'correct-flash';
+            } else {
+                score -= 1;
+                feedbackClass = 'wrong-flash';
+            }
 
-  function endGame() {
-    clearInterval(timerInterval);
-    gameState = 'finished';
-    refillStack();
-  }
+            await tick(); // wait for DOM update
+
+            nextProblem();
+
+            setTimeout(() => {
+                feedbackClass = '';
+            }, 300);
+        } catch (e) {
+            error = e.message;
+        }
+    }
 
 
-  onMount(() => {
-    const handleKeyDown = (e) => {
-      if (!currentProblem) return;
+    function startGame() {
+        clearInterval(timerInterval);
+        sessionHistory =[];
+        score = 0;
+        timeLeft = 10;
+        gameState = 'playing';
+        nextProblem();
 
-      const key = e.key.toLowerCase();
-      if (key === 'c') {
-        handleDecision(true); 
-      } else if (key === 'f') {
-        handleDecision(false);
-      }
-    };
+        timerInterval = setInterval(() => {
+            timeLeft -= 1;
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }, 1000);
+    }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+    function endGame() {
+        clearInterval(timerInterval);
+        gameState = 'finished';
+        refillStack();
+    }
 
-  onDestroy(() => {
-    clearInterval(timerInterval);
-  });
+
+    onMount(() => {
+        const handleKeyDown = (e) => {
+            if (!currentProblem) return;
+
+            const key = e.key.toLowerCase();
+            if (key === 'c') {
+                handleDecision(true); 
+            } else if (key === 'f') {
+                handleDecision(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    });
+
+    onDestroy(() => {
+        clearInterval(timerInterval);
+    });
 
 </script>
 <main>
@@ -176,14 +209,14 @@
     </div>
 
     <div class="history-section">
-      <h2>Hand History</h2>
-      {#if sessionHistory.length > 0}
-        {#each sessionHistory as round (round.problem.id || index)}
-          <SessionReviewItem {round} {index} />
-        {/each}
-      {:else}
-        <p>No hands were played.</p>
-      {/if}
+        <h2>Hand History</h2>
+        {#if sessionHistory.length > 0}
+            {#each sessionHistory as round, index (round.problem.problem_id)}
+                <SessionReviewItem {round} {index} />
+            {/each}
+        {:else}
+            <p>No hands were played.</p>
+        {/if}
     </div>
 
   {:else}

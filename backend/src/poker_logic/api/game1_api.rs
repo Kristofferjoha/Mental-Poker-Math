@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use tracing::info;
 use uuid::Uuid;
 
-// What we send to client on GET /api/get-problem (no equity, no correct_decision)
 #[derive(Serialize)]
 pub struct ProblemRequest {
     pub problem_id: Uuid,
@@ -42,7 +41,6 @@ pub async fn get_new_problem(State(app_state): State<AppState>) -> Json<ProblemR
     info!("Generated POT EQ problem ID: {}", problem_id);
     info!("Correct decision (hidden from client): {}", problem.correct_decision);
 
-    // Store problem in pot_eq_store
     app_state
         .pot_eq_store
         .lock()

@@ -1,3 +1,4 @@
+// $env:RUST_LOG = "info"   
 mod poker_logic;
 mod app_state; 
 

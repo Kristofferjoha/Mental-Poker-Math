@@ -21,6 +21,7 @@ async fn main() {
     let app_state = AppState {
         pot_eq_store: Arc::new(Mutex::new(HashMap::new())),
         pure_eq_store: Arc::new(Mutex::new(HashMap::new())),
+        pure_pot_odds_store: Arc::new(Mutex::new(HashMap::new())),
     };
 
     let cors = CorsLayer::new()
@@ -33,6 +34,8 @@ async fn main() {
         .route("/api/check-answer", post(api::check_answer))
         .route("/api/pure-eq-get-problem", get(api::get_pure_eq_problem))
         .route("/api/pure-eq-check-answer", post(api::pure_eq_check_answer))
+        .route("/api/pure-pot-odds-get-problem", get(api::get_pure_pot_odds_problem))
+        .route("/api/pure-pot-odds-check-answer", post(api::pure_pot_odds_check_answer))
         .with_state(app_state)
         .layer(cors);
 

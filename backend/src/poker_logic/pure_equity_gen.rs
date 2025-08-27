@@ -29,7 +29,7 @@ pub fn generate_pure_eq_problem() -> PureEqEquityProblem {
         &player_hand,
         &opponent_hand,
         &board,
-        10_000,
+        25_000,
     );
 
     let player_equity = equity_result.equity()*100.0; 

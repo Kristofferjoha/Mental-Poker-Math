@@ -1,16 +1,21 @@
 <main>
-  <h1>🧠 Mental Poker Math</h1>
+  <h1>Mental Poker Math</h1>
   <p>Sharpen your poker intuition and numerical precision.</p>
 
   <nav class="game-menu">
     <a href="/pot-odds-game" class="game-link">
-      <h2>Game 1: Pot Odds Decision</h2>
+      <h2>Pot Odds + EV decision making</h2>
       <p>Train your intuitive feel for hand strength vs. pot odds.</p>
     </a>
     
     <a href="/pure-eq-game" class="game-link">
-      <h2>Game 2: +EV Decision (Coming Soon)</h2>
+      <h2>Pure EV</h2>
       <p>A pure math quiz on expected value.</p>
+    </a>
+
+    <a href="/pure-pot-odds-game" class="game-link">
+      <h2>Pure Odds</h2>
+      <p>A pure math quiz on odds and probabilities.</p>
     </a>
 
   </nav>

@@ -65,6 +65,7 @@
     }
 
     async function handleDecision(userChoseToCall) {
+        if (gameState !== 'playing') return;
         if (!currentProblem) return;
 
         try {
@@ -105,7 +106,7 @@
                 feedbackClass = 'wrong-flash';
             }
 
-            await tick(); // wait for DOM update
+            await tick(); 
 
             nextProblem();
 
@@ -142,7 +143,14 @@
 
 
     onMount(() => {
+        refillStack();
+
         const handleKeyDown = (e) => {
+            // Check the game state right away
+            if (gameState !== 'playing') {
+                return;
+            }
+            
             if (!currentProblem) return;
 
             const key = e.key.toLowerCase();
@@ -178,47 +186,34 @@
 
   {:else if gameState === 'playing'}
     <div class="game-container">
-      <div class="game-header">
-        <span>🕒 Time: {timeLeft}</span>
-        <span class="score" class:correct-flash={feedbackClass === 'correct-flash'} class:wrong-flash={feedbackClass === 'wrong-flash'}>
-        🏆 Score: {score}
-        </span>
-      </div>
-
-      <!--
-        The PokerTable component now handles everything.
-        We pass the decision handler down to it.
-      -->
       <PokerTable
         {currentProblem}
         on:decision={event => handleDecision(event.detail.choseToCall)}
         disabled={!currentProblem}
+        gameStats={{ time: timeLeft, score: score, feedbackClass }}
       />
-
-      <div class="feedback">{feedback}&nbsp;</div>
     </div>
 
 
   {:else if gameState === 'finished'}
-    <div class="menu-box">
-      <h2>Game Over!</h2>
-      <p>Your final score is:</p>
+    <div class="game-over-box">
+      <p>Your final score:</p>
       <p class="final-score">{score}</p>
-      <button on:click={startGame}>Play Again</button>
-      <a href="/" class="home-link">Back to Menu</a>
+      <button on:click={startGame}>Try Again</button>
     </div>
 
     <div class="history-section">
-        <h2>Hand History</h2>
-        {#if sessionHistory.length > 0}
-            {#each sessionHistory as round, index (round.problem.problem_id)}
-                <SessionReviewItem {round} {index} />
-            {/each}
-        {:else}
-            <p>No hands were played.</p>
-        {/if}
+      <h2>Hand History</h2>
+      {#if sessionHistory.length > 0}
+        <div class="history-scroll">
+          {#each sessionHistory as round, index (round.problem.problem_id)}
+            <SessionReviewItem {round} {index} />
+          {/each}
+        </div>
+      {:else}
+        <p>No hands were played.</p>
+      {/if}
     </div>
-
   {:else}
     <div class="menu-box">
       <p>Loading...</p>
@@ -227,126 +222,102 @@
 </main>
 
 <style>
-  /* Reduce the main padding to make everything more compact */
+  :root {
+    --primary-color: #000000;
+    --background-color: #f0f2f5;
+    --container-bg: #ffffff;
+    --text-color: #333;
+    --border-radius: 12px;
+    --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
   main {
-    font-family: sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     text-align: center;
     padding: 1rem;
+    background-color: var(--background-color);
+    color: var(--text-color);
   }
 
   .game-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    justify-content: center;
+    min-height: 90vh;
+    padding: 0.5rem;
   }
 
   .menu-box {
     max-width: 600px;
-    margin: auto;
-    padding: 2rem;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    margin: 2rem auto;
+    padding: 2.5rem;
+    background: var(--container-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
   }
+  
   .menu-box p {
-    line-height: 1.6;
+    line-height: 1.7;
+    margin-bottom: 1rem;
   }
+
+  .game-over-box {
+    max-width: 250px;
+    margin: auto;
+    padding: 0.5rem;
+    background: var(--container-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+  
   .loading-info {
     font-style: italic;
     color: #888;
   }
+  
   button {
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
+    padding: 0.6rem 1.5rem;
+    font-size: 1.1rem;
     cursor: pointer;
     border-radius: 8px;
     border: none;
-    background-color: #007bff;
+    background-color: var(--primary-color);
     color: white;
+    transition: background-color 0.2s ease, transform 0.2s ease;
   }
-  .home-link {
-    display: block;
-    margin-top: 1rem;
-  }
-  .game-header {
-    display: flex;
-    justify-content: space-around;
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    width: 100%;
-    max-width: 700px;
+  
+  button:hover {
+    background-color: #46494c;
+    transform: translateY(-2px);
   }
 
-  .feedback {
-    font-weight: bold;
-    font-size: 1.5rem;
-    height: 2rem;
-  }
   .final-score {
     font-size: 3rem;
     font-weight: bold;
-    margin: 1rem 0;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
   }
+  
   .history-section {
     margin-top: 3rem;
-    max-width: 600px;
+    max-width: 700px;
     margin-left: auto;
     margin-right: auto;
   }
-  .score {
-  position: relative; /* Needed for pseudo-element positioning */
-  z-index: 1;
-  padding: 0.2rem 0.5rem;
-  border-radius: 5px;
-  transition: transform 0.1s; /* Keep the transform transition */
+
+  .history-scroll {
+    max-height: 45vh;
+    overflow-y: auto;  
+    padding-right: 15px;
+    border-top: 1px solid #ddd;
+    padding-top: 1rem;
   }
 
-
-  .score::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 5px;
-    opacity: 0;
-    z-index: -1; /* Place it behind the text */
-  }
-
-  .correct-flash {
-    animation: flash-green 0.3s ease-out;
-  }
-  .wrong-flash {
-    animation: flash-red 0.3s ease-out;
-  }
-
-  @keyframes flash-green {
-    0% { transform: scale(1.2); }
-    40% { /* Let the color flash peak and hold briefly */ }
-    100% { transform: scale(1); }
-  }
-
-  /* Animate the ::before pseudo-element's background and opacity */
-  .correct-flash::before {
-    background-color: #28a745;
-    animation: flash-opacity 0.3s ease-out;
-  }
-
-  .wrong-flash::before {
-    background-color: #dc3545;
-    animation: flash-opacity 0.3s ease-out;
-  }
-
-  /* A single animation for the opacity flash */
-  @keyframes flash-opacity {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-
-  /* We don't need the color change on the text itself, but if you want it: */
-  @keyframes flash-red { /* or flash-green */
-    0% { color: white; transform: scale(1.2); }
-    100% { color: initial; transform: scale(1); }
+  @media (max-width: 768px) {
+    .menu-box, .game-over-box {
+      padding: 1.5rem;
+    }
   }
 </style>

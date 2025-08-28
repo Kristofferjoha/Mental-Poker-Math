@@ -151,15 +151,22 @@
                 {currentProblem}
                 hidePot={true}
             />
-            <input
-                type="number"
-                step="0.1"
-                bind:value={answer}
-                placeholder="Your equity %"
-                bind:this={answerInput}
-            />
+            <div class="input-area">
+                <input
+                    type="number"
+                    step="0.1"
+                    bind:value={answer}
+                    placeholder="Your equity %"
+                    bind:this={answerInput}
+                    class="equity-input"
+                />
+                <div class="input-hint">Enter percentage (e.g., 65.2)</div>
+            </div>
         {:else}
-            <p>Loading problem...</p>
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading problem...</p>
+            </div>
         {/if}
 
     {:else if gameState === 'finished'}
@@ -172,22 +179,170 @@
 </main>
 
 <style>
-    main { font-family: sans-serif; text-align: center; padding: 1rem; }
-    .menu-box { max-width: 600px; margin: auto; padding: 2rem; border: 1px solid #ccc; border-radius: 8px; }
-    button { padding: 1rem 2rem; font-size: 1.2rem; cursor: pointer; border-radius: 8px; border: none; background-color: #007bff; color: white; }
-    input { padding: 0.5rem; font-size: 1.2rem; margin-top: 1rem; width: 200px; text-align: center; }
-    .game-header { display: flex; justify-content: space-around; font-size: 1.5rem; margin-bottom: 1rem; }
-    .correct-flash { animation: flash-green 0.3s ease-out; }
-    .wrong-flash { animation: flash-red 0.3s ease-out; }
-    @keyframes flash-green {
-        0% { background-color: #28a745; }
-        100% { background-color: transparent; }
+    main { 
+        font-family: 'Inter', system-ui, sans-serif; 
+        text-align: center; 
+        padding: 1rem; 
+        max-width: 1000px;
+        margin: 0 auto;
     }
-    @keyframes flash-red {
-        0% { background-color: #dc3545; }
-        100% { background-color: transparent; }
+    
+    .menu-box { 
+        max-width: 600px; 
+        margin: auto; 
+        padding: 2rem; 
+        background: #1e1e1e;
+        border: 1px solid #3f3f46;
+        border-radius: 12px; 
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-    .correct-flash, .wrong-flash { animation: none; transition: background-color 0.1s ease-out; }
-    .score.correct-flash { background-color: #28a745; color: white; border-radius: 5px; padding: 0 5px; }
-    .score.wrong-flash { background-color: #dc3545; color: white; border-radius: 5px; padding: 0 5px; }
+    
+    .menu-box h1 {
+        background: linear-gradient(135deg, #d4af37 0%, #fbbf24 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+    }
+    
+    .menu-box p {
+        color: #a1a1aa;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+    
+    button { 
+        padding: 1rem 2rem; 
+        font-size: 1.2rem; 
+        cursor: pointer; 
+        border-radius: 12px; 
+        border: none; 
+        background: linear-gradient(135deg, #d4af37 0%, #b8941f 100%);
+        color: #2a2a2a; 
+        font-weight: 600;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .input-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .equity-input { 
+        padding: 1rem 1.5rem; 
+        font-size: 1.3rem; 
+        width: 240px; 
+        text-align: center;
+        border: 2px solid #3f3f46;
+        border-radius: 12px;
+        background: #2a2a2a;
+        color: white;
+        font-family: inherit;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .equity-input:focus {
+        outline: none;
+        border-color: #d4af37;
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+    }
+    
+    .input-hint {
+        font-size: 0.875rem;
+        color: #71717a;
+        font-style: italic;
+    }
+    
+    .game-header { 
+        display: flex; 
+        justify-content: space-around; 
+        font-size: 1.5rem; 
+        margin-bottom: 1.5rem; 
+        width: 100%;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 1rem;
+        background: rgba(30, 30, 30, 0.8);
+        border-radius: 12px;
+        border: 1px solid #3f3f46;
+    }
+    
+    .game-header span {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .loading-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 2rem;
+        color: #a1a1aa;
+    }
+    
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid #d4af37;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .correct-flash, .wrong-flash { 
+        position: relative;
+        transition: all 0.3s ease-out; 
+    }
+    
+    .score {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+    }
+    
+    .score.correct-flash { 
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white; 
+        transform: scale(1.05);
+    }
+    
+    .score.wrong-flash { 
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white; 
+        transform: scale(1.05);
+    }
+    
+    @media (max-width: 768px) {
+        .game-header {
+            font-size: 1.2rem;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .equity-input {
+            width: 200px;
+            font-size: 1.1rem;
+            padding: 0.8rem 1.2rem;
+        }
+    }
 </style>

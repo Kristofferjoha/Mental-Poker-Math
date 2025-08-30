@@ -1,0 +1,76 @@
+:root {
+	--gold: #d4af37;
+	--gold-hover: #b8941f;
+
+	--dark-bg: #121212;
+	--content-bg: #1e1e1e;
+	--border-color: #3f3f46;
+
+	--text-primary: #e4e4e7;
+	--text-secondary: #a1a1aa;
+
+	--green: #10b981;
+	--red: #ef4444;
+	--blue: #3b82f6;
+
+	--border-radius-lg: 12px;
+	--border-radius-md: 8px;
+}
+
+body {
+	font-family: 'Inter', system-ui, sans-serif;
+	background-color: var(--dark-bg);
+	color: var(--text-primary);
+	margin: 0;
+	padding: 0;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+main {
+	max-width: 800px;
+	margin: 2rem auto;
+	padding: 1rem;
+	text-align: center;
+}
+
+h1,
+h2 {
+	font-weight: 700;
+}
+
+h1 {
+	background: linear-gradient(135deg, var(--gold) 0%, #fbbf24 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+}
+
+p {
+	color: var(--text-secondary);
+	line-height: 1.6;
+}
+
+button {
+	padding: 0.8rem 1.8rem;
+	font-size: 1.1rem;
+	font-family: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	border-radius: var(--border-radius-md);
+	border: none;
+	background: linear-gradient(135deg, var(--gold) 0%, var(--gold-hover) 100%);
+	color: var(--content-bg);
+	transition: all 0.2s ease;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+button:hover:not(:disabled) {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}

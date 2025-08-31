@@ -1,9 +1,10 @@
 use crate::poker_logic::{pure_pot_odds_gen};
 use crate::AppState;
-use axum::{extract::State, Json};
+use axum::{extract::{Query,State}, Json,};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use uuid::Uuid;
+use std::collections::HashMap;
 
 #[derive(Serialize)]
 pub struct PurePotOddsProblemRequest {
@@ -30,8 +31,10 @@ pub struct PurePotOddsCheckAnswerResponse {
     pub pot_odds: f64,
 }
 
-pub async fn get_pure_pot_odds_problem(State(app_state): State<AppState>) -> Json<PurePotOddsProblemRequest> {
-    let problem = pure_pot_odds_gen::generate_pure_pot_odds_problem();
+pub async fn get_pure_pot_odds_problem(State(app_state): State<AppState>, Query(params): Query<HashMap<String, String>>) -> Json<PurePotOddsProblemRequest> {
+    let allow_overbets = params.get("allowOverbets").map(|v| v == "true").unwrap_or(true);
+
+    let problem = pure_pot_odds_gen::generate_pure_pot_odds_problem(allow_overbets);
     let problem_id = Uuid::new_v4();
 
     info!("Generated Pure Pot Odds problem ID: {}", problem_id);

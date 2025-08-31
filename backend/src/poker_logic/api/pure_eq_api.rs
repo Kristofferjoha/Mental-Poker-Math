@@ -1,9 +1,10 @@
 use crate::poker_logic::{card::Card, pure_equity_gen};
 use crate::AppState;
-use axum::{extract::State, Json};
+use axum::{extract::{State, Query}, Json};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use uuid::Uuid;
+use std::collections::HashMap;
 
 #[derive(Serialize)]
 pub struct PureEqProblemRequest {
@@ -28,8 +29,17 @@ pub struct PureEqCheckAnswerResponse {
     pub player_equity: f32,
 }
 
-pub async fn get_pure_eq_problem(State(app_state): State<AppState>) -> Json<PureEqProblemRequest> {
-    let problem = pure_equity_gen::generate_pure_eq_problem();
+pub async fn get_pure_eq_problem(State(app_state): State<AppState>, Query(params): Query<HashMap<String, String>>) -> Json<PureEqProblemRequest> {
+    let allowed_streets = params
+        .get("streets")
+        .map(|s| s.split(',').map(String::from).collect())
+        .unwrap_or_else(|| vec![
+            "pre-flop".to_string(),
+            "flop".to_string(),
+            "turn".to_string(),
+            "river".to_string(),
+        ]);
+    let problem = pure_equity_gen::generate_pure_eq_problem(allowed_streets);
     let problem_id = Uuid::new_v4();
 
     info!("Generated PURE EQ problem ID: {}", problem_id);

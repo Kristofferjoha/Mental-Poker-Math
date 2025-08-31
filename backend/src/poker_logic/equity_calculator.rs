@@ -3,7 +3,7 @@ use crate::poker_logic::{
     deck::Deck,
     hand_evaluator::evaluate_hand,
 };
-use rand::thread_rng;
+use rand::rng;
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
 use std::cmp::Ordering;
@@ -37,7 +37,7 @@ pub fn calculate_equity(
 let results = (0..num_simulations)
     .into_par_iter()
     .map_init(
-        || (thread_rng(), base_deck.clone()),
+        || (rng(), base_deck.clone()),
         |(rng, deck), _| {
             let mut local_deck = deck.clone();
             local_deck.cards.shuffle(rng);

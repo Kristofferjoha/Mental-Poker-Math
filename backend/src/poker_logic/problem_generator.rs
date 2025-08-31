@@ -1,5 +1,6 @@
 use crate::poker_logic::{card::Card, deck::Deck, equity_calculator};
-use rand::{seq::SliceRandom, thread_rng, Rng};
+use rand::{rng, Rng};
+use rand::prelude::IndexedMutRandom;
 
 #[derive(Clone, Debug)]
 pub enum Street {
@@ -34,7 +35,7 @@ pub struct PotEquityProblem {
 }
 
 pub fn generate_pot_eq_problem(allowed_streets_str: Vec<String>, allow_overbets: bool) -> PotEquityProblem {
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut deck = Deck::new();
     deck.shuffle(&mut rng);
 
@@ -49,10 +50,10 @@ pub fn generate_pot_eq_problem(allowed_streets_str: Vec<String>, allow_overbets:
     if allowed_streets.is_empty() {
         allowed_streets = vec![Street::PreFlop, Street::Flop, Street::Turn, Street::River];
     }
-    let chosen_street = allowed_streets.choose(&mut rng).unwrap();
+    let chosen_street = allowed_streets.choose_mut(&mut rng).unwrap();
     let board = draw_board(&mut deck, chosen_street);
 
-    let pot_size = (rng.gen_range(10_000..100_000) / 1000) * 1000;
+    let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;
     let min_bet = pot_size / 4;
     let max_bet = if allow_overbets {
         pot_size * 3 / 2
@@ -60,7 +61,7 @@ pub fn generate_pot_eq_problem(allowed_streets_str: Vec<String>, allow_overbets:
         pot_size * 9 / 10
     };
     let effective_min_bet = if min_bet < 5000 { 5000 } else { min_bet };
-    let bet_to_call = (rng.gen_range(effective_min_bet..=max_bet) / 1000) * 1000;
+    let bet_to_call = (rng.random_range(effective_min_bet..=max_bet) / 1000) * 1000;
 
     let equity_result = equity_calculator::calculate_equity(
         &player_hand,

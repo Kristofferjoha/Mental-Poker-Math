@@ -1,6 +1,6 @@
 use crate::poker_logic::{card::Card, deck::Deck, equity_calculator};
-use rand::seq::SliceRandom;
-use rand::{thread_rng};
+use rand::{rng};
+use rand::prelude::IndexedMutRandom;
 
 // Problem struct for pot-equity questions
 #[derive(Clone, Debug)]
@@ -34,7 +34,7 @@ impl Street {
 }
 
 pub fn generate_pure_eq_problem(allowed_streets_str: Vec<String>) -> PureEqEquityProblem {
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut deck = Deck::new();
     deck.shuffle(&mut rng);
 
@@ -50,7 +50,7 @@ pub fn generate_pure_eq_problem(allowed_streets_str: Vec<String>) -> PureEqEquit
         allowed_streets = vec![Street::PreFlop, Street::Flop, Street::Turn, Street::River];
     }
 
-    let chosen_street = allowed_streets.choose(&mut rng).unwrap();
+    let chosen_street = allowed_streets.choose_mut(&mut rng).unwrap();
     
     let board = draw_board(&mut deck, chosen_street);
 

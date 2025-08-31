@@ -185,16 +185,26 @@
 			if (!config) throw new Error('Game configuration not found!');
 
 			const params = new URLSearchParams();
+			const frontendOnlyOptions = ['duration'];
+
 			for (const key in selectedOptions) {
-				if (Array.isArray(selectedOptions[key])) {
-					params.append(key, selectedOptions[key].join(','));
+				if (frontendOnlyOptions.includes(key)) {
+					continue;
+				}
+
+
+				const value = selectedOptions[key];
+				if (Array.isArray(value)) {
+					params.append(key, value.join(','));
 				} else {
-					params.append(key, selectedOptions[key]);
+					params.append(key, String(value));
 				}
 			}
-			
-			const url = `${config.api.getProblem}?${params.toString()}`;
-			console.log('Fetching from URL:', url); // debugggggg (fjerner senere HUSKKK)
+
+			const queryString = params.toString();
+			const url = queryString ? `${config.api.getProblem}?${queryString}` : config.api.getProblem;
+
+			console.log('Fetching from URL:', url); // debugging (husk at fjernennenene)
 
 			const res = await fetch(url);
 

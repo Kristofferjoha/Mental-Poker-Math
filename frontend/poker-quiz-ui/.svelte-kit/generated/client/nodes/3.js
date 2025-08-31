@@ -1,0 +1,1 @@
+export { default as component } from "../../../../src/routes/pot-odds-game/+page.svelte";

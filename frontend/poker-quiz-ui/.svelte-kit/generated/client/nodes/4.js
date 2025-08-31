@@ -1,0 +1,1 @@
+export { default as component } from "../../../../src/routes/pure-eq-game/+page.svelte";

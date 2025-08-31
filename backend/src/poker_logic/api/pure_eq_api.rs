@@ -39,7 +39,9 @@ pub async fn get_pure_eq_problem(State(app_state): State<AppState>, Query(params
             "turn".to_string(),
             "river".to_string(),
         ]);
-    let problem = pure_equity_gen::generate_pure_eq_problem(allowed_streets);
+    let problem = pure_equity_gen::generate_pure_eq_problem(allowed_streets,
+        &app_state.preflop_equity_data,
+    );
     let problem_id = Uuid::new_v4();
 
     info!("Generated PURE EQ problem ID: {}", problem_id);

@@ -5,7 +5,6 @@ use crate::poker_logic::{
     preflop_lookup::PreflopEquity,
 };
 use rand::{rng, Rng};
-use rand::seq::SliceRandom;
 use tracing::{error, info};
 use rand::prelude::IndexedRandom;
 
@@ -60,7 +59,7 @@ pub fn generate_pot_eq_problem(
     if *chosen_street == Street::PreFlop {
         let matchup = preflop_data.choose(&mut rng).expect("Preflop equity data is empty");
         info!("Selected matchup: {} vs {}, equity: {}", matchup.hand1, matchup.hand2, matchup.equity);
-        let player_is_hand1 = rng.gen_bool(0.5);
+        let player_is_hand1 = rng.random_bool(0.5);
         let (player_hand, opponent_hand, used_equity) = match hands_from_strings(&matchup.hand1, &matchup.hand2, &mut rng) {
             Ok((h1, h2)) => {
                 let (player_hand, opponent_hand) = if player_is_hand1 { (h1, h2) } else { (h2, h1) };
@@ -83,7 +82,7 @@ pub fn generate_pot_eq_problem(
             }
         };
 
-        let pot_size = (rng.gen_range(10_000..100_000) / 1000) * 1000;
+        let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;
         let bet_to_call = generate_bet_size(pot_size, allow_overbets, &mut rng);
         let pot_odds = bet_to_call as f32 / (pot_size + bet_to_call) as f32;
 
@@ -104,7 +103,7 @@ pub fn generate_pot_eq_problem(
         let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
         let board = draw_board(&mut deck, chosen_street);
 
-        let pot_size = (rng.gen_range(10_000..100_000) / 1000) * 1000;
+        let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;
         let bet_to_call = generate_bet_size(pot_size, allow_overbets, &mut rng);
 
         let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &board, 1_000_000);
@@ -128,7 +127,7 @@ fn generate_bet_size(pot_size: u32, allow_overbets: bool, rng: &mut impl Rng) ->
     let min_bet = pot_size / 4;
     let max_bet = if allow_overbets { pot_size * 3 / 2 } else { pot_size * 9 / 10 };
     let effective_min_bet = if min_bet < 5000 { 5000 } else { min_bet };
-    (rng.gen_range(effective_min_bet..=max_bet) / 1000) * 1000
+    (rng.random_range(effective_min_bet..=max_bet) / 1000) * 1000
 }
 
 fn draw_board(deck: &mut Deck, stage: &Street) -> Vec<Card> {
@@ -152,10 +151,10 @@ fn hands_from_strings(hand1_str: &str, hand2_str: &str, rng: &mut impl Rng) -> R
 
     // Handle cases where one hand is a pair and the other is suited with the same second rank
     let hand1 = if (is_pair1 && is_suited2 && chars1[0] == chars2[1]) || (is_suited1 && is_pair2 && chars1[1] == chars2[0]) {
-        let (pair_str, suited_str, pair_is_hand1) = if is_pair1 { (hand1_str, hand2_str, true) } else { (hand2_str, hand1_str, false) };
-        let r_pair = char_to_rank(pair_str.chars().next().ok_or("Invalid pair string")?)?;
-        let r_suited1 = char_to_rank(suited_str.chars().next().ok_or("Invalid suited string")?)?;
-        let r_suited2 = char_to_rank(suited_str.chars().nth(1).ok_or("Invalid suited string")?)?;
+        let (pair_hand, suited_hand) = if is_pair1 { (hand1_str, hand2_str) } else { (hand2_str, hand1_str) };
+        let r_pair = char_to_rank(pair_hand.chars().next().ok_or("Invalid pair string")?)?;
+        let r_suited1 = char_to_rank(suited_hand.chars().next().ok_or("Invalid suited string")?)?;
+        let r_suited2 = char_to_rank(suited_hand.chars().nth(1).ok_or("Invalid suited string")?)?;
 
         // Parse the pair first
         let pair: Vec<Card> = deck.cards.iter().filter(|c| c.rank == r_pair).take(2).cloned().collect();
@@ -175,10 +174,10 @@ fn hands_from_strings(hand1_str: &str, hand2_str: &str, rng: &mut impl Rng) -> R
         let suit = *available_suits.choose(rng).ok_or("Failed to select suit for suited hand")?;
         let card1 = deck.cards.iter().find(|c| c.rank == r_suited1 && c.suit == suit).ok_or("No card found for first rank in suited hand")?;
         let card2 = deck.cards.iter().find(|c| c.rank == r_suited2 && c.suit == suit).ok_or("No suited card found for second rank")?;
-        info!("{}: Selected suit {:?}", suited_str, suit);
+        info!("{}: Selected suit {:?}", suited_hand, suit);
         let suited = vec![*card1, *card2];
 
-        if pair_is_hand1 { pair } else { suited }
+        if is_pair1 { pair } else { suited }
     } else if is_suited1 && is_suited2 && chars1[1] == chars2[1] {
         // Handle suited hands with shared second rank
         let r1 = char_to_rank(chars1[0])?;
@@ -202,9 +201,9 @@ fn hands_from_strings(hand1_str: &str, hand2_str: &str, rng: &mut impl Rng) -> R
     deck.remove_cards(&hand1);
 
     let hand2 = if (is_pair1 && is_suited2 && chars1[0] == chars2[1]) || (is_suited1 && is_pair2 && chars1[1] == chars2[0]) {
-        let (pair_str, suited_str, pair_is_hand1) = if is_pair1 { (hand1_str, hand2_str, true) } else { (hand2_str, hand1_str, false) };
-        let r_suited1 = char_to_rank(suited_str.chars().next().ok_or("Invalid suited string")?)?;
-        let r_suited2 = char_to_rank(suited_str.chars().nth(1).ok_or("Invalid suited string")?)?;
+        let (_pair_hand, suited_hand) = if is_pair1 { (hand1_str, hand2_str) } else { (hand2_str, hand1_str) };
+        let r_suited1 = char_to_rank(suited_hand.chars().next().ok_or("Invalid suited string")?)?;
+        let r_suited2 = char_to_rank(suited_hand.chars().nth(1).ok_or("Invalid suited string")?)?;
         let available_suits: Vec<Suit> = [Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades]
             .into_iter()
             .filter(|s| deck.cards.iter().any(|c| c.rank == r_suited2 && c.suit == *s))
@@ -215,7 +214,7 @@ fn hands_from_strings(hand1_str: &str, hand2_str: &str, rng: &mut impl Rng) -> R
         let suit = *available_suits.choose(rng).ok_or("Failed to select suit for suited hand")?;
         let card1 = deck.cards.iter().find(|c| c.rank == r_suited1 && c.suit == suit).ok_or("No card found for first rank in suited hand")?;
         let card2 = deck.cards.iter().find(|c| c.rank == r_suited2 && c.suit == suit).ok_or("No suited card found for second rank")?;
-        info!("{}: Selected suit {:?}", suited_str, suit);
+        info!("{}: Selected suit {:?}", suited_hand, suit);
         vec![*card1, *card2]
     } else if is_suited1 && is_suited2 && chars1[1] == chars2[1] {
         let r1 = char_to_rank(chars2[0])?;

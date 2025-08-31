@@ -1,9 +1,10 @@
 use crate::poker_logic::{card::Card, problem_generator};
 use crate::AppState;
-use axum::{extract::State, Json};
+use axum::{extract::{Query, State}, Json};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use uuid::Uuid;
+use std::collections::HashMap;
 
 #[derive(Serialize)]
 pub struct ProblemRequest {
@@ -34,8 +35,23 @@ pub struct CheckAnswerResponse {
     pub pot_odds: f32,
 }
 
-pub async fn get_new_problem(State(app_state): State<AppState>) -> Json<ProblemRequest> {
-    let problem = problem_generator::generate_pot_eq_problem();
+pub async fn get_new_problem(State(app_state): State<AppState>, Query(params): Query<HashMap<String, String>>) -> Json<ProblemRequest> {
+
+    let allowed_streets = params
+        .get("streets")
+        .map(|s| s.split(',').map(String::from).collect())
+        .unwrap_or_else(|| vec![
+            "pre-flop".to_string(),
+            "flop".to_string(),
+            "turn".to_string(),
+            "river".to_string(),
+        ]);
+    
+    let allow_overbets = params
+        .get("allowOverbets")
+        .map_or(true, |v| v == "true");
+
+    let problem = problem_generator::generate_pot_eq_problem(allowed_streets, allow_overbets);
     let problem_id = Uuid::new_v4();
 
     info!("Generated POT EQ problem ID: {}", problem_id);

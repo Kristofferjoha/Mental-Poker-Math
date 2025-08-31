@@ -35,12 +35,16 @@ const STARTING_HANDS: [&str; 169] = [
 
 fn main() {
     println!("Starting generation.");
+    const NUM_SIMULATIONS: u32 = 450000; 
 
-    const NUM_SIMULATIONS: u32 = 300; 
+    let start_time = std::time::Instant::now();
+    let mut processed = 0;
+
     let mut all_equities: Vec<PreflopEquity> = Vec::new();
 
     for (i, hand1_str) in STARTING_HANDS.iter().enumerate() {
         for hand2_str in STARTING_HANDS.iter().skip(i) {
+
             
             let (hand1, hand2) = hands_from_strings(hand1_str, hand2_str);
 
@@ -59,9 +63,15 @@ fn main() {
             
             all_equities.push(equity_entry);
 
-            println!("Calculated: {} vs {} -> {:.2}%", hand1_str, hand2_str, all_equities.last().unwrap().equity);
+            processed += 1;
+            if processed % 100 == 0 {
+                let elapsed = start_time.elapsed();
+                println!("Processed {} / {} matchups, elapsed: {:.2?}", processed, 14365, elapsed);
+            }
         }
     }
+
+    println!("Generation complete in {:.2?}", start_time.elapsed());
 
     println!("Generation complete. Writing to file...");
     let json_output = serde_json::to_string_pretty(&all_equities).expect("Failed to serialize to JSON");

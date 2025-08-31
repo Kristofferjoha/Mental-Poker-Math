@@ -1,7 +1,5 @@
 use crate::poker_logic::card::{Card, Rank, Suit};
 
-use rand::seq::SliceRandom;
-use rand::Rng;
 use strum::IntoEnumIterator;
 
 #[derive(Debug, Clone)]
@@ -20,11 +18,6 @@ impl Deck {
         Deck { cards }
     }
 
-    pub fn shuffle<R: Rng + ?Sized>(&mut self, rng: &mut R) {
-        self.cards.shuffle(rng);
-    }
-
-    // function that removes cards in argument from the deck
     pub fn remove_cards(&mut self, cards: &[Card]) {
         self.cards.retain(|c| !cards.contains(c));
     }

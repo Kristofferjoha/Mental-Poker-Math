@@ -1,7 +1,7 @@
 // $env:RUST_LOG = "info"   
 mod poker_logic;
 mod app_state; 
-
+use crate::poker_logic::preflop_lookup::PreflopEquity;
 use app_state::AppState;
 use poker_logic::api;
 use std::fs;
@@ -19,8 +19,11 @@ use std::sync::{Arc, Mutex};
 async fn main() {
     tracing_subscriber::fmt::init();
 
+    tracing::info!("Loading preflop equity data...");
     let preflop_data_string = fs::read_to_string("preflop_equity.json").unwrap();
+
     let preflop_equity_data: Vec<PreflopEquity> = serde_json::from_str(&preflop_data_string).unwrap();
+    tracing::info!("Loaded preflop equity data: {} entries", preflop_equity_data.len());
 
     let app_state = AppState {
         pot_eq_store: Arc::new(Mutex::new(HashMap::new())),

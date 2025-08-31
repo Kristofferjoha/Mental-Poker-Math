@@ -51,7 +51,11 @@ pub async fn get_new_problem(State(app_state): State<AppState>, Query(params): Q
         .get("allowOverbets")
         .map_or(true, |v| v == "true");
 
-    let problem = problem_generator::generate_pot_eq_problem(allowed_streets, allow_overbets);
+    let problem = problem_generator::generate_pot_eq_problem(
+        allowed_streets, 
+        allow_overbets,
+        &app_state.preflop_equity_data,
+    );
     let problem_id = Uuid::new_v4();
 
     info!("Generated POT EQ problem ID: {}", problem_id);

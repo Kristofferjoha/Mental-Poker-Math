@@ -6,3 +6,4 @@ pub mod problem_generator;
 pub mod api;
 pub mod pure_equity_gen;
 pub mod pure_pot_odds_gen;
+pub mod pre_flop_lookup;

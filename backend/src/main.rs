@@ -4,6 +4,7 @@ mod app_state;
 
 use app_state::AppState;
 use poker_logic::api;
+use std::fs;
 
 use axum::{
     routing::{get, post},
@@ -18,10 +19,15 @@ use std::sync::{Arc, Mutex};
 async fn main() {
     tracing_subscriber::fmt::init();
 
+    let preflop_data_string = fs::read_to_string("preflop_equity.json").unwrap();
+    let preflop_equity_data: Vec<PreflopEquity> = serde_json::from_str(&preflop_data_string).unwrap();
+
     let app_state = AppState {
         pot_eq_store: Arc::new(Mutex::new(HashMap::new())),
         pure_eq_store: Arc::new(Mutex::new(HashMap::new())),
         pure_pot_odds_store: Arc::new(Mutex::new(HashMap::new())),
+        preflop_equity_data: Arc::new(preflop_equity_data),
+
     };
 
     let cors = CorsLayer::new()

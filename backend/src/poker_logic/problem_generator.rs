@@ -106,7 +106,7 @@ pub fn generate_pot_eq_problem(
         let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;
         let bet_to_call = generate_bet_size(pot_size, allow_overbets, &mut rng);
 
-        let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &board, 1_000_000);
+        let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &board, 25_000);
         let player_equity = equity_result.equity();
         let pot_odds = bet_to_call as f32 / (pot_size + bet_to_call) as f32;
 

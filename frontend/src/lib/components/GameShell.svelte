@@ -51,8 +51,8 @@
 		</div>
 	{:else if gameState === 'playing'}
 		<header class="game-header">
-			<span>🕒 {timeLeft}</span>
-			<span class="score">🏆 {score}</span>
+			<span>Timer: {timeLeft}</span>
+			<span class="score">Score: {score}</span>
 		</header>
 
 		<div class="game-content">

@@ -19,6 +19,7 @@
 	import PokerTable from '$lib/components/PokerTable.svelte';
 	import SessionReviewItem from '$lib/components/SessionReviewItem.svelte';
 	import OptionsMenu from '$lib/components/OptionsMenu.svelte';
+	import { set } from 'mongoose';
 
 	// Struct for game configurations
 	type GameConfig = {
@@ -239,10 +240,11 @@
 			if (!res.ok) throw new Error(`Server error: ${res.status}`);
 			const data: PurePotOddsCheckResponse = await res.json();
 			if (data.isCorrect) score++;
-			feedback = data;
+
+			feedbackClass = data.isCorrect ? 'correct-flash' : 'incorrect-flash';
 			setTimeout(() => {
-				if (feedback) nextProblem();
-			}, 1500);
+				nextProblem();
+			}, 250);
 		} catch (e: any) {
 			error = e.message;
 			isCheckingAnswer = false;
@@ -402,7 +404,7 @@
 						disabled={isCheckingAnswer}
 						on:keydown={handleEquityKeyDown}
 					/>
-					<div class="input-hint">Enter percentage (e.g., 65.2) and press Enter</div>
+					<div class="input-hint">Press Enter</div>
 				</div>
 
 			<!-- Pot Odds + EV Game -->

@@ -31,7 +31,7 @@
 			{#if !isCorrect && item.game === 'pot-odds-ev' && isPotEvResponse(item.response)}
 				<span class="correct-decision">(Correct: {item.response.correctDecision ? 'Call' : 'Fold'})</span>
 			{:else if !isCorrect && item.game === 'pure-equity' && isPureEqResponse(item.response)}
-				<span class="correct-decision">(Actual: {(item.response.playerEquity * 100).toFixed(1)}%)</span>
+				<span class="correct-decision">(Actual: {(item.response.playerEquity).toFixed(1)}%)</span>
 			{/if}
 		</div>
 	</div>

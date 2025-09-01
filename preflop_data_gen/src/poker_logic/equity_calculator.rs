@@ -1,12 +1,7 @@
-use crate::poker_logic::{
-    card::Card,
-    deck::Deck,
-    hand_evaluator::evaluate_hand,
-};
-use rand::rng;
-use rand::seq::SliceRandom;
+use crate::poker_logic::card::{Card, Rank, Suit as MySuit};
+use rs_poker::core::{Hand, Suit, Value};
+use rs_poker::holdem::MonteCarloGame;
 use rayon::prelude::*;
-use std::cmp::Ordering;
 
 pub struct Equity {
     pub wins: u32,
@@ -26,52 +21,90 @@ pub fn calculate_equity(
     board: &[Card],
     num_simulations: u32,
 ) -> Equity {
-    let base_deck = {
-    let mut d = Deck::new();
-    d.remove_cards(player_hand);
-    d.remove_cards(opponent_hand);
-    d.remove_cards(board);
-    d
-};
+    let hero_cards: Vec<rs_poker::core::Card> = player_hand.iter().map(to_rs_card).collect();
+    let villain_cards: Vec<rs_poker::core::Card> = opponent_hand.iter().map(to_rs_card).collect();
+    let _board_cards: Vec<rs_poker::core::Card> = board.iter().map(to_rs_card).collect();
 
-let results = (0..num_simulations)
-    .into_par_iter()
-    .map_init(
-        || (rng(), base_deck.clone()),
-        |(rng, deck), _| {
-            let mut local_deck = deck.clone();
-            local_deck.cards.shuffle(rng);
+    let hero_hand = Hand::new_with_cards(hero_cards);
+    let villain_hand = Hand::new_with_cards(villain_cards);
+    let hands = vec![hero_hand, villain_hand];
 
-            let cards_to_deal = 5 - board.len();
-            let simulated_board: Vec<_> = board.iter()
-                .cloned()
-                .chain(local_deck.cards.iter().take(cards_to_deal).cloned())
-                .collect();
+    let chunk_size = 2000;
+    let results = (0..num_simulations)
+        .into_par_iter()
+        .chunks(chunk_size)
+        .map_init(
+            || MonteCarloGame::new(hands.clone()).unwrap(),
+            |game, chunk| {
+                let mut wins = 0;
+                let mut ties = 0;
 
-            let mut player_hand_buf = [Card::default(); 7];
-            player_hand_buf[..2].copy_from_slice(player_hand);
-            player_hand_buf[2..].copy_from_slice(&simulated_board);
+                for _ in chunk {
+                    let result_mask = game.simulate().0;
+                    game.reset();
 
-            let mut opponent_hand_buf = [Card::default(); 7];
-            opponent_hand_buf[..2].copy_from_slice(opponent_hand);
-            opponent_hand_buf[2..].copy_from_slice(&simulated_board);
+                    let mut hero_won = false;
+                    let mut num_winners = 0;
 
-            let player_rank = evaluate_hand(&player_hand_buf);
-            let opponent_rank = evaluate_hand(&opponent_hand_buf);
+                    for winner in result_mask.ones() {
+                        num_winners += 1;
+                        if winner == 0 {
+                            hero_won = true;
+                        }
+                    }
 
-            match player_rank.cmp(&opponent_rank) {
-                Ordering::Greater => (1, 0),
-                Ordering::Equal => (0, 1),
-                Ordering::Less => (0, 0),
-            }
-        }
-    )
-    .reduce(|| (0, 0), |(w1, t1), (w2, t2)| (w1 + w2, t1 + t2));
+                    if hero_won {
+                        if num_winners > 1 {
+                            ties += 1;
+                        } else {
+                            wins += 1;
+                        }
+                    }
+                }
 
+                (wins, ties)
+            },
+        )
+        .reduce(|| (0, 0), |(w1, t1), (w2, t2)| (w1 + w2, t1 + t2));
 
     Equity {
         wins: results.0,
         ties: results.1,
         total_sims: num_simulations,
     }
+}
+
+impl From<Rank> for Value {
+    fn from(rank: Rank) -> Self {
+        match rank {
+            Rank::Two => Value::Two,
+            Rank::Three => Value::Three,
+            Rank::Four => Value::Four,
+            Rank::Five => Value::Five,
+            Rank::Six => Value::Six,
+            Rank::Seven => Value::Seven,
+            Rank::Eight => Value::Eight,
+            Rank::Nine => Value::Nine,
+            Rank::Ten => Value::Ten,
+            Rank::Jack => Value::Jack,
+            Rank::Queen => Value::Queen,
+            Rank::King => Value::King,
+            Rank::Ace => Value::Ace,
+        }
+    }
+}
+
+impl From<MySuit> for Suit {
+    fn from(suit: MySuit) -> Self {
+        match suit {
+            MySuit::Clubs => Suit::Club,
+            MySuit::Diamonds => Suit::Diamond,
+            MySuit::Hearts => Suit::Heart,
+            MySuit::Spades => Suit::Spade,
+        }
+    }
+}
+
+fn to_rs_card(card: &Card) -> rs_poker::core::Card {
+    rs_poker::core::Card::new(card.rank.into(), card.suit.into())
 }

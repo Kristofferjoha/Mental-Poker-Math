@@ -35,11 +35,6 @@ pub struct Card {
     pub rank: Rank,
 }
 
-impl Rank {
-    pub const fn to_u8(self) -> u8 {
-        self as u8
-    }
-}
 
 impl Default for Suit {
     fn default() -> Self {

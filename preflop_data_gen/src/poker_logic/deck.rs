@@ -18,8 +18,4 @@ impl Deck {
         Deck { cards }
     }
 
-    pub fn remove_cards(&mut self, cards: &[Card]) {
-        self.cards.retain(|c| !cards.contains(c));
-    }
-
 }

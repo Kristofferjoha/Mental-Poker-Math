@@ -322,9 +322,35 @@
 			isCheckingAnswer = false;
 		}
 	}
+
+	async function handleKeyPress(event: KeyboardEvent) {
+        if (event.target instanceof HTMLInputElement) {
+            return;
+        }
+
+        const key = event.key.toLowerCase();
+
+        if (key !== 'c' && key !== 'f') {
+            return;
+        }
+
+        event.preventDefault();
+
+        const decision = key === 'c';
+
+        if (game === 'pure-pot-odds') {
+            checkPotOddsAnswer(decision);
+        } else if (game === 'pot-odds-ev') {
+            checkPotEvAnswer(decision);
+        }
+    }
+
 </script>
 
+<svelte:window on:keydown={handleKeyPress} />
+
 {#if config}
+	
 	<GameShell
 		bind:score
 		title={config.title}
@@ -351,12 +377,12 @@
 							<p>
 								Correct decision: <strong>{feedback.correctDecision ? 'CALL' : 'FOLD'}</strong>.
 							</p>
-							<p>Required equity: > <strong>{feedback.potOdds.toFixed(1)}%</strong></p>
+							<p>Required equity: <strong>{feedback.potOdds.toFixed(1)}%</strong></p>
 						</div>
 					{:else}
 						<div class="button-group">
-							<button class="call-btn" on:click={() => checkPotOddsAnswer(true)} disabled={isCheckingAnswer}>CALL</button>
-							<button class="fold-btn" on:click={() => checkPotOddsAnswer(false)} disabled={isCheckingAnswer}>FOLD</button>
+							<button class="call-btn" on:click={() => checkPotOddsAnswer(true)} disabled={isCheckingAnswer}>CALL <kbd>C</kbd></button>
+							<button class="fold-btn" on:click={() => checkPotOddsAnswer(false)} disabled={isCheckingAnswer}>FOLD <kbd>F</kbd></button>
 						</div>
 					{/if}
 				</div>
@@ -384,8 +410,8 @@
 				<PokerTable problem={currentProblem} />
 				<div class="action-area">
 					<div class="button-group">
-						<button class="call-btn" on:click={() => checkPotEvAnswer(true)} disabled={isCheckingAnswer}>CALL</button>
-						<button class="fold-btn" on:click={() => checkPotEvAnswer(false)} disabled={isCheckingAnswer}>FOLD</button>
+						<button class="call-btn" on:click={() => checkPotEvAnswer(true)} disabled={isCheckingAnswer}>CALL <kbd>C</kbd></button>
+						<button class="fold-btn" on:click={() => checkPotEvAnswer(false)} disabled={isCheckingAnswer}>FOLD <kbd>F</kbd></button>
 					</div>
 				</div>
 			{/if}
@@ -425,11 +451,25 @@
 		margin-top: 2rem;
 		text-align: center;
 	}
-	.button-group {
-		display: flex;
-		justify-content: center;
-		gap: 1.5rem;
-	}
+	.button-group button {	
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+    }
+
+    .button-group button kbd {
+        font-family: monospace;
+        font-size: 0.9em;
+        padding: 0.1em 0.5em;
+        border-radius: var(--border-radius-sm, 4px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        line-height: 1;
+        position: relative;
+        top: -1px;
+    }
 	.call-btn {
 		background: var(--green);
 		color: white;

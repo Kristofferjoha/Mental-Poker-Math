@@ -4,9 +4,9 @@ use crate::poker_logic::{
     equity_calculator,
     preflop_lookup::PreflopEquity,
 };
-use rand::{rng, Rng};
-use tracing::{error, info};
 use rand::prelude::IndexedRandom;
+use rand::{Rng, rng};
+use tracing::{error, info};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Street {
@@ -46,6 +46,8 @@ pub fn generate_pot_eq_problem(
     preflop_data: &[PreflopEquity],
 ) -> PotEquityProblem {
     let mut rng = rng();
+    let mut deck = Deck::new();
+    deck.shuffle(&mut rng);
 
     let mut allowed_streets: Vec<Street> = allowed_streets_str
         .iter()
@@ -56,70 +58,56 @@ pub fn generate_pot_eq_problem(
     }
     let chosen_street = allowed_streets.choose(&mut rng).unwrap();
 
-    if *chosen_street == Street::PreFlop {
+    let (player_hand, opponent_hand, board, used_equity) = if *chosen_street == Street::PreFlop {
         let matchup = preflop_data.choose(&mut rng).expect("Preflop equity data is empty");
         info!("Selected matchup: {} vs {}, equity: {}", matchup.hand1, matchup.hand2, matchup.equity);
         let player_is_hand1 = rng.random_bool(0.5);
-        let (player_hand, opponent_hand, used_equity) = match hands_from_strings(&matchup.hand1, &matchup.hand2, &mut rng) {
-            Ok((h1, h2)) => {
-                let (player_hand, opponent_hand) = if player_is_hand1 { (h1, h2) } else { (h2, h1) };
-                let equity = if player_is_hand1 {
-                    matchup.equity / 100.0
-                } else {
-                    (100.0 - matchup.equity) / 100.0
-                };
-                info!("Parsed hands successfully: {:?} vs {:?}, equity: {}", player_hand, opponent_hand, equity);
-                (player_hand, opponent_hand, equity)
-            }
-            Err(e) => {
-                error!("Failed to parse hands {} vs {}: {}, generating random hands", matchup.hand1, matchup.hand2, e);
-                let mut deck = Deck::new();
-                deck.shuffle(&mut rng);
-                let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
-                let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
-                let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &vec![], 25_000);
-                (player_hand, opponent_hand, equity_result.equity())
-            }
-        };
 
-        let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;
-        let bet_to_call = generate_bet_size(pot_size, allow_overbets, &mut rng);
-        let pot_odds = bet_to_call as f32 / (pot_size + bet_to_call) as f32;
-
-        PotEquityProblem {
-            player_hand,
-            opponent_hand,
-            board: vec![],
-            pot_size,
-            bet_to_call,
-            player_equity: used_equity,
-            pot_odds,
-            correct_decision: used_equity > pot_odds,
-        }
+        let (player_hand, opponent_hand, used_equity) =
+            match hands_from_strings(&matchup.hand1, &matchup.hand2, &mut deck, &mut rng) {
+                Ok((h1, h2)) => {
+                    let (player_hand, opponent_hand) = if player_is_hand1 { (h1, h2) } else { (h2, h1) };
+                    let equity = if player_is_hand1 {
+                        matchup.equity / 100.0
+                    } else {
+                        (100.0 - matchup.equity) / 100.0
+                    };
+                    info!("Parsed hands successfully: {:?} vs {:?}, equity: {}", player_hand, opponent_hand, equity);
+                    (player_hand, opponent_hand, equity)
+                }
+                Err(e) => {
+                    error!("Failed to parse hands {} vs {}: {}, generating random hands", matchup.hand1, matchup.hand2, e);
+                    let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
+                    let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
+                    let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &vec![], 25_000);
+                    (player_hand, opponent_hand, equity_result.equity())
+                }
+            };
+        (player_hand, opponent_hand, vec![], used_equity)
     } else {
-        let mut deck = Deck::new();
-        deck.shuffle(&mut rng);
         let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
         let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
         let board = draw_board(&mut deck, chosen_street);
 
-        let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;
-        let bet_to_call = generate_bet_size(pot_size, allow_overbets, &mut rng);
-
         let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &board, 25_000);
         let player_equity = equity_result.equity();
-        let pot_odds = bet_to_call as f32 / (pot_size + bet_to_call) as f32;
 
-        PotEquityProblem {
-            player_hand,
-            opponent_hand,
-            board,
-            pot_size,
-            bet_to_call,
-            player_equity,
-            pot_odds,
-            correct_decision: player_equity > pot_odds,
-        }
+        (player_hand, opponent_hand, board, player_equity)
+    };
+
+    let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;
+    let bet_to_call = generate_bet_size(pot_size, allow_overbets, &mut rng);
+    let pot_odds = bet_to_call as f32 / (pot_size + bet_to_call) as f32;
+
+    PotEquityProblem {
+        player_hand,
+        opponent_hand,
+        board,
+        pot_size,
+        bet_to_call,
+        player_equity: used_equity,
+        pot_odds,
+        correct_decision: used_equity > pot_odds,
     }
 }
 
@@ -140,8 +128,12 @@ fn draw_board(deck: &mut Deck, stage: &Street) -> Vec<Card> {
     (0..num_cards).map(|_| deck.cards.pop().unwrap()).collect()
 }
 
-fn hands_from_strings(hand1_str: &str, hand2_str: &str, rng: &mut impl Rng) -> Result<(Vec<Card>, Vec<Card>), &'static str> {
-    let mut deck = Deck::new();
+fn hands_from_strings(
+    hand1_str: &str,
+    hand2_str: &str,
+    deck: &mut Deck,
+    rng: &mut impl Rng,
+) -> Result<(Vec<Card>, Vec<Card>), &'static str> {
     let chars1: Vec<char> = hand1_str.chars().collect();
     let chars2: Vec<char> = hand2_str.chars().collect();
     let is_suited1 = chars1.len() == 3 && chars1[2] == 's';
@@ -149,21 +141,25 @@ fn hands_from_strings(hand1_str: &str, hand2_str: &str, rng: &mut impl Rng) -> R
     let is_pair1 = chars1.len() == 2 && chars1[0] == chars1[1];
     let is_pair2 = chars2.len() == 2 && chars2[0] == chars2[1];
 
-    // Handle cases where one hand is a pair and the other is suited with the same second rank
-    let hand1 = if (is_pair1 && is_suited2 && chars1[0] == chars2[1]) || (is_suited1 && is_pair2 && chars1[1] == chars2[0]) {
-        let (pair_hand, suited_hand) = if is_pair1 { (hand1_str, hand2_str) } else { (hand2_str, hand1_str) };
+    let hand1 = if (is_pair1 && is_suited2 && chars1[0] == chars2[1])
+        || (is_suited1 && is_pair2 && chars1[1] == chars2[0])
+    {
+        let (pair_hand, suited_hand) = if is_pair1 {
+            (hand1_str, hand2_str)
+        } else {
+            (hand2_str, hand1_str)
+        };
         let r_pair = char_to_rank(pair_hand.chars().next().ok_or("Invalid pair string")?)?;
         let r_suited1 = char_to_rank(suited_hand.chars().next().ok_or("Invalid suited string")?)?;
-        let r_suited2 = char_to_rank(suited_hand.chars().nth(1).ok_or("Invalid suited string")?)?;
+        let r_suited2 =
+            char_to_rank(suited_hand.chars().nth(1).ok_or("Invalid suited string")?)?;
 
-        // Parse the pair first
         let pair: Vec<Card> = deck.cards.iter().filter(|c| c.rank == r_pair).take(2).cloned().collect();
         if pair.len() < 2 {
             return Err("Not enough cards for pair");
         }
         deck.remove_cards(&pair);
 
-        // For the suited hand, choose a suit that has the second rank available
         let available_suits: Vec<Suit> = [Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades]
             .into_iter()
             .filter(|s| deck.cards.iter().any(|c| c.rank == r_suited2 && c.suit == *s))
@@ -179,7 +175,6 @@ fn hands_from_strings(hand1_str: &str, hand2_str: &str, rng: &mut impl Rng) -> R
 
         if is_pair1 { pair } else { suited }
     } else if is_suited1 && is_suited2 && chars1[1] == chars2[1] {
-        // Handle suited hands with shared second rank
         let r1 = char_to_rank(chars1[0])?;
         let r2 = char_to_rank(chars1[1])?;
         let available_suits: Vec<Suit> = [Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades]
@@ -200,10 +195,17 @@ fn hands_from_strings(hand1_str: &str, hand2_str: &str, rng: &mut impl Rng) -> R
 
     deck.remove_cards(&hand1);
 
-    let hand2 = if (is_pair1 && is_suited2 && chars1[0] == chars2[1]) || (is_suited1 && is_pair2 && chars1[1] == chars2[0]) {
-        let (_pair_hand, suited_hand) = if is_pair1 { (hand1_str, hand2_str) } else { (hand2_str, hand1_str) };
+    let hand2 = if (is_pair1 && is_suited2 && chars1[0] == chars2[1])
+        || (is_suited1 && is_pair2 && chars1[1] == chars2[0])
+    {
+        let (_pair_hand, suited_hand) = if is_pair1 {
+            (hand1_str, hand2_str)
+        } else {
+            (hand2_str, hand1_str)
+        };
         let r_suited1 = char_to_rank(suited_hand.chars().next().ok_or("Invalid suited string")?)?;
-        let r_suited2 = char_to_rank(suited_hand.chars().nth(1).ok_or("Invalid suited string")?)?;
+        let r_suited2 =
+            char_to_rank(suited_hand.chars().nth(1).ok_or("Invalid suited string")?)?;
         let available_suits: Vec<Suit> = [Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades]
             .into_iter()
             .filter(|s| deck.cards.iter().any(|c| c.rank == r_suited2 && c.suit == *s))
@@ -239,7 +241,11 @@ fn hands_from_strings(hand1_str: &str, hand2_str: &str, rng: &mut impl Rng) -> R
     Ok((hand1, hand2))
 }
 
-fn hand_string_to_cards(hand_str: &str, available_cards: &[Card], rng: &mut impl Rng) -> Result<Vec<Card>, &'static str> {
+fn hand_string_to_cards(
+    hand_str: &str,
+    available_cards: &[Card],
+    rng: &mut impl Rng,
+) -> Result<Vec<Card>, &'static str> {
     let chars: Vec<char> = hand_str.chars().collect();
     info!("Parsing hand: {}", hand_str);
     if chars.len() < 2 || chars.len() > 3 {
@@ -271,12 +277,13 @@ fn hand_string_to_cards(hand_str: &str, available_cards: &[Card], rng: &mut impl
         }
         Ok(vec![*card1, *card2.unwrap()])
     } else {
-        let card2 = available_cards.iter().find(|c| c.rank == r2 && c.suit != card1.suit);
-        if card2.is_none() {
+        let card2_candidates: Vec<&Card> = available_cards.iter().filter(|c| c.rank == r2 && c.suit != card1.suit).collect();
+        if card2_candidates.is_empty() {
             error!("No card with rank {:?} and different suit from {:?} found for {}", r2, card1.suit, hand_str);
             return Err("No offsuit card found for second rank");
         }
-        Ok(vec![*card1, *card2.unwrap()])
+        let card2 = *card2_candidates.choose(rng).ok_or("Failed to select second card")?;
+        Ok(vec![*card1, *card2])
     }
 }
 

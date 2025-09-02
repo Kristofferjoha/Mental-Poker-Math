@@ -59,11 +59,14 @@ pub fn generate_pure_eq_problem(
 
     let chosen_street = allowed_streets.choose(&mut rng).unwrap();
 
-    let (player_hand, opponent_hand, player_equity) = if *chosen_street == Street::PreFlop {
+    // FIX 1: The `if/else` block now returns the board along with the hands and equity.
+    // This ensures the board used for calculation is the same one used in the final struct.
+    let (player_hand, opponent_hand, board, player_equity) = if *chosen_street == Street::PreFlop {
         let matchup = preflop_data.choose(&mut rng).expect("Preflop equity data is empty");
         info!("Selected matchup: {} vs {}, equity: {}", matchup.hand1, matchup.hand2, matchup.equity);
         let player_is_hand1 = rng.random_bool(0.5);
-        let (player_hand, opponent_hand, equity) = match hands_from_strings(&matchup.hand1, &matchup.hand2, &mut rng) {
+
+        let (player_hand, opponent_hand, equity) = match hands_from_strings(&matchup.hand1, &matchup.hand2, &mut deck, &mut rng) {
             Ok((h1, h2)) => {
                 let (player_hand, opponent_hand) = if player_is_hand1 { (h1, h2) } else { (h2, h1) };
                 let equity = if player_is_hand1 {
@@ -76,26 +79,34 @@ pub fn generate_pure_eq_problem(
             }
             Err(e) => {
                 error!("Failed to parse hands {} vs {}: {}, generating random hands", matchup.hand1, matchup.hand2, e);
+                // Fallback to random generation if parsing fails
                 let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
                 let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
-                let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &vec![], 25_000);
+                let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &[], 25_000);
                 (player_hand, opponent_hand, equity_result.equity())
             }
         };
-        (player_hand, opponent_hand, equity)
+        // For pre-flop, the board is empty.
+        (player_hand, opponent_hand, vec![], equity)
     } else {
         let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
         let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
+        
+        // Board is drawn ONCE here.
         let board = draw_board(&mut deck, chosen_street);
+        
+        // This board is used for the equity calculation.
         let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &board, 25_000);
-        (player_hand, opponent_hand, equity_result.equity())
+        
+        // And the same board is returned.
+        (player_hand, opponent_hand, board, equity_result.equity())
     };
 
-    let board = draw_board(&mut deck, chosen_street);
+    // FIX 1: The redundant, second call to `draw_board` has been removed from here.
 
     let player_equity_scaled = player_equity * 100.0;
-    let lower_bound_equity = player_equity_scaled - tolerance;
-    let upper_bound_equity = player_equity_scaled + tolerance;
+    let lower_bound_equity = (player_equity_scaled - tolerance).max(0.0);
+    let upper_bound_equity = (player_equity_scaled + tolerance).min(100.0);
 
     PureEqEquityProblem {
         player_hand,
@@ -118,8 +129,7 @@ fn draw_board(deck: &mut Deck, stage: &Street) -> Vec<Card> {
     (0..num_cards).map(|_| deck.cards.pop().unwrap()).collect()
 }
 
-fn hands_from_strings(hand1_str: &str, hand2_str: &str, rng: &mut impl Rng) -> Result<(Vec<Card>, Vec<Card>), &'static str> {
-    let mut deck = Deck::new();
+fn hands_from_strings(hand1_str: &str, hand2_str: &str, deck: &mut Deck, rng: &mut impl Rng) -> Result<(Vec<Card>, Vec<Card>), &'static str> {
     let chars1: Vec<char> = hand1_str.chars().collect();
     let chars2: Vec<char> = hand2_str.chars().collect();
     let is_suited1 = chars1.len() == 3 && chars1[2] == 's';

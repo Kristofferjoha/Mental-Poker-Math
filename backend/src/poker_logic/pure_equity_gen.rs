@@ -41,6 +41,7 @@ impl Street {
 pub fn generate_pure_eq_problem(
     allowed_streets_str: Vec<String>,
     preflop_data: &[PreflopEquity],
+    tolerance: f32,
 ) -> PureEqEquityProblem {
     let mut rng = rng();
     let mut deck = Deck::new();
@@ -91,7 +92,6 @@ pub fn generate_pure_eq_problem(
     let board = draw_board(&mut deck, chosen_street);
 
     let player_equity_scaled = player_equity * 100.0;
-    let tolerance = 2.0;
     let lower_bound_equity = player_equity_scaled - tolerance;
     let upper_bound_equity = player_equity_scaled + tolerance;
 

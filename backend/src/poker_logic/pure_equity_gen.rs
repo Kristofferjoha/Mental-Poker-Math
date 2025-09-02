@@ -16,6 +16,7 @@ pub struct PureEqEquityProblem {
     pub player_equity: f32,
     pub lower_bound_equity: f32,
     pub upper_bound_equity: f32,
+    pub directional_hint_active: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -42,6 +43,7 @@ pub fn generate_pure_eq_problem(
     allowed_streets_str: Vec<String>,
     preflop_data: &[PreflopEquity],
     tolerance: f32,
+    directional_hints_active: bool,
 ) -> PureEqEquityProblem {
     let mut rng = rng();
     let mut deck = Deck::new();
@@ -102,6 +104,7 @@ pub fn generate_pure_eq_problem(
         player_equity: player_equity_scaled,
         lower_bound_equity,
         upper_bound_equity,
+        directional_hint_active: directional_hints_active,
     }
 }
 

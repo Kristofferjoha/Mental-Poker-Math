@@ -19,7 +19,6 @@
 	import PokerTable from '$lib/components/PokerTable.svelte';
 	import SessionReviewItem from '$lib/components/SessionReviewItem.svelte';
 	import OptionsMenu from '$lib/components/OptionsMenu.svelte';
-	import { set } from 'mongoose';
 
 	// Struct for game configurations
 	type GameConfig = {
@@ -94,6 +93,17 @@
 							{ label: 'Flop', value: 'flop' },
 							{ label: 'Turn', value: 'turn' },
 							{ label: 'River', value: 'river' }
+						]
+					},
+					{
+						id: 'tolerance',
+						label: 'Guess Tolerance (±%)',
+						type: 'select',
+						defaultValue: 5,
+						choices: [
+							{ label: '2%', value: 2 },
+							{ label: '5%', value: 5 },
+							{ label: '10%', value: 10 }
 						]
 					}
 				]
@@ -450,7 +460,7 @@
 
 <style>
 	.action-area {
-		margin-top: 2rem;
+		margin-top: 1rem;
 		text-align: center;
 	}
 	.button-group button {	

@@ -74,7 +74,7 @@
 <style>
 	.game-shell {
 		max-width: 800px;
-		margin: 2rem auto;
+		margin: auto;
 		padding: 1rem;
 	}
 
@@ -84,7 +84,7 @@
 		align-items: center;
 		font-size: 1.5rem;
 		font-weight: 600;
-		margin-bottom: 2.5rem;
+		margin-bottom: 1rem;
 		padding: 1rem;
 		background-color: var(--content-bg);
 		border-radius: var(--border-radius-lg);

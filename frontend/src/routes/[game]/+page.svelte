@@ -105,6 +105,12 @@
 							{ label: '5%', value: 5 },
 							{ label: '10%', value: 10 }
 						]
+					},
+					{
+						id: 'directionalHints',
+						label: 'Show Directional Hints',
+						type: 'checkbox',
+						defaultValue: false
 					}
 				]
 			}
@@ -160,6 +166,7 @@
 	let feedback: AnyFeedback | null = null;
 	let isCheckingAnswer = false;
 	let error: string | null = null;
+	let directionalHint: 'Higher' | 'Lower' | 'Not-Active' = 'Not-Active';
 
 	let equityGuess = '';
 	let equityInput: HTMLInputElement;
@@ -192,6 +199,8 @@
 		feedbackClass = '';
 		equityGuess = '';
 		isCheckingAnswer = false;
+		directionalHint = 'Not-Active';
+
 		try {
 			if (!config) throw new Error('Game configuration not found!');
 
@@ -277,6 +286,8 @@
 			if (!res.ok) throw new Error(`Server error: ${res.status}`);
 			const data: PureEqCheckResponse = await res.json();
 
+			directionalHint = data.directionalHint;
+
 			sessionHistory = [
 				...sessionHistory,
 				{
@@ -290,8 +301,9 @@
 			if (data.isCorrect) {
 				score++;
 				feedbackClass = 'correct';
-				setTimeout(nextProblem, 200);
+				setTimeout(nextProblem, 400);
 			} else {
+				feedbackClass = 'incorrect';
 				isCheckingAnswer = false;
 				await tick();
 				equityInput?.select();
@@ -403,17 +415,28 @@
 			{:else if game === 'pure-equity' && isPureEqProblem(currentProblem)}
 				<PokerTable problem={currentProblem} />
 				<div class="action-area">
-					<input
-						type="number"
-						step="0.1"
-						bind:value={equityGuess}
-						placeholder="Your equity %"
-						bind:this={equityInput}
-						class="equity-input"
-						class:correct={feedbackClass === 'correct'}
-						disabled={isCheckingAnswer}
-						on:keydown={handleEquityKeyDown}
-					/>
+
+					<div class="input-wrapper">
+						<input
+							type="number"
+							step="0.1"
+							bind:value={equityGuess}
+							placeholder="Your equity %"
+							bind:this={equityInput}
+							class="equity-input"
+							class:correct={feedbackClass === 'correct'}
+							class:incorrect={feedbackClass === 'incorrect'} disabled={isCheckingAnswer}
+							on:keydown={handleEquityKeyDown}
+						/>
+
+						<div class="hint-arrow">
+							{#if directionalHint === 'Higher'}
+								<span class="arrow-up" title="Higher!">▲</span>
+							{:else if directionalHint === 'Lower'}
+								<span class="arrow-down" title="Lower!">▼</span>
+							{/if}
+						</div>
+					</div>
 					<div class="input-hint">Press Enter</div>
 				</div>
 
@@ -598,5 +621,37 @@
 	@keyframes flash-green {
 		0%, 100% { box-shadow: none; }
 		50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 30%, transparent); }
+	}
+	.input-wrapper {
+		position: relative;
+		display: inline-block;
+	}
+
+	.hint-arrow {
+		position: absolute;
+		top: 50%;
+		right: 1rem;
+		transform: translateY(-50%);
+		font-size: 1.5rem;
+		pointer-events: none;
+		animation: fadeIn 0.3s;
+	}
+
+	.arrow-up {
+		color: var(--green);
+	}
+
+	.arrow-down {
+		color: var(--red);
+	}
+
+	.equity-input.incorrect {
+		border-color: var(--red);
+		animation: flash-red 0.4s ease;
+	}
+
+	@keyframes flash-red {
+		0%, 100% { box-shadow: none; }
+		50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--red) 30%, transparent); }
 	}
 </style>

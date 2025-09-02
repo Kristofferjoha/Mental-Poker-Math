@@ -41,6 +41,7 @@ export interface PureEqProblem {
 export interface PureEqCheckResponse {
 	isCorrect: boolean;
 	playerEquity: number;
+	directionalHint: 'Higher' | 'Lower' | 'Not-Active';
 }
 
 // ===================================================================

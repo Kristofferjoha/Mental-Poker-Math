@@ -2,13 +2,13 @@
 	const games = [
 		{
 			slug: 'pot-odds-ev',
-			title: 'Pot Odds + EV Decision',
-			description: 'Cards on the table. Face an all-in and decide if calling is profitable.'
+			title: 'Pot Odds + EQ Decision',
+			description: 'Heads-up all-in scenario. Decide to call or fold based on pot odds vs. equity.'
 		},
 		{
 			slug: 'pure-equity',
-			title: 'Pure Equity Trainer',
-			description: "See a heads-up all-in scenario and estimate your hand's raw equity."
+			title: 'Equity Intuition Training',
+			description: "See a heads-up all-in scenario and estimate your hand's equity."
 		},
 		{
 			slug: 'pure-pot-odds',
@@ -19,12 +19,12 @@
 </script>
 
 <svelte:head>
-	<title>Mental Poker Trainer</title>
+	<title>Mental Poker Math</title>
 	<meta name="description" content="A collection of minigames to sharpen your poker math intuition." />
 </svelte:head>
 
 <main>
-	<h1>Mental Poker Trainer</h1>
+	<h1>Mental Poker Math</h1>
 	<p class="subtitle">Sharpen your poker intuition and numerical precision with these targeted drills.</p>
 
 	<nav class="game-menu">

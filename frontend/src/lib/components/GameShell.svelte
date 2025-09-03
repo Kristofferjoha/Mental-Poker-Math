@@ -60,10 +60,13 @@
 		</div>
 	{:else if gameState === 'finished'}
 		<div class="menu-box">
-			<h2>Time's up!</h2>
+			<h2>Final Score:</h2>
 			<p class="final-score">{score}</p>
-			<button on:click={startGame}>Play Again</button>
-
+			
+			<div class="button-group">
+				<button on:click={startGame}>Play Again</button>
+				<a href="/" class="button-secondary">Main Menu</a>
+			</div>
 			<div class="results-area">
 				<slot name="results" />
 			</div>
@@ -122,4 +125,26 @@
 		margin-top: 2.5rem;
 		text-align: left;
 	}
+	.button-group {
+		display: flex;
+		justify-content: center;
+		gap: 1rem;
+		margin-bottom: 2rem;
+	}
+	.button-secondary {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    text-decoration: none;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background-color: transparent;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.button-secondary:hover {
+    background-color: var(--content-bg-alt);
+    border-color: var(--text-secondary);
+}
 </style>

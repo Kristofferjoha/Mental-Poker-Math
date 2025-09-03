@@ -69,7 +69,7 @@
 			<span>Pot Odds: <strong>{(item.response.potOdds * 100).toFixed(1)}%</strong></span>
 			<span>Your Equity: <strong>{(item.response.playerEquity * 100).toFixed(1)}%</strong></span>
 		{:else if item.game === 'pure-equity' && isPureEqResponse(item.response)}
-			<span>Your Equity: <strong>{(item.response.playerEquity * 100).toFixed(1)}%</strong></span>
+			<span>Your Equity: <strong>{(item.response.playerEquity).toFixed(1)}%</strong></span>
 		{/if}
 	</div>
 </div>

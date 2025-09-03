@@ -59,8 +59,6 @@ pub fn generate_pure_eq_problem(
 
     let chosen_street = allowed_streets.choose(&mut rng).unwrap();
 
-    // FIX 1: The `if/else` block now returns the board along with the hands and equity.
-    // This ensures the board used for calculation is the same one used in the final struct.
     let (player_hand, opponent_hand, board, player_equity) = if *chosen_street == Street::PreFlop {
         let matchup = preflop_data.choose(&mut rng).expect("Preflop equity data is empty");
         info!("Selected matchup: {} vs {}, equity: {}", matchup.hand1, matchup.hand2, matchup.equity);
@@ -86,23 +84,18 @@ pub fn generate_pure_eq_problem(
                 (player_hand, opponent_hand, equity_result.equity())
             }
         };
-        // For pre-flop, the board is empty.
         (player_hand, opponent_hand, vec![], equity)
     } else {
         let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
         let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
         
-        // Board is drawn ONCE here.
         let board = draw_board(&mut deck, chosen_street);
         
-        // This board is used for the equity calculation.
         let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &board, 25_000);
         
-        // And the same board is returned.
         (player_hand, opponent_hand, board, equity_result.equity())
     };
 
-    // FIX 1: The redundant, second call to `draw_board` has been removed from here.
 
     let player_equity_scaled = player_equity * 100.0;
     let lower_bound_equity = (player_equity_scaled - tolerance).max(0.0);

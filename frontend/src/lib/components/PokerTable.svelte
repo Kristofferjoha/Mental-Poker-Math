@@ -65,7 +65,7 @@
 						<div class="pot-info">
 							<div class="pot-chip">
 								<span class="pot-amount">{potAfterCall}</span>
-								<span class="pot-label">Total Pot</span>
+								<span class="pot-label">Pre All-In Pot</span>
 							</div>
 						</div>
 					{/if}
@@ -143,6 +143,7 @@
 		flex-direction: column;
 		gap: 1rem;
 		align-items: center;
+		margin: 0.5rem 0;
 	}
 	.player-area {
 		display: flex;
@@ -178,12 +179,13 @@
 		border: 1px solid rgba(255, 255, 255, 0.1);
 	}
 	.card-placeholder {
-		width: 54px;
-		height: 80px;
-		border-radius: 4px;
-		border: 2px dashed rgba(255, 255, 255, 0.2);
-		background: rgba(255, 255, 255, 0.05);
-	}
+    box-sizing: border-box;
+    width: 54px;
+    height: 80px;
+    border-radius: 6px;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+}
 	.info-chip {
 		border: 1px solid;
 		background: color-mix(in srgb, currentColor 20%, transparent);

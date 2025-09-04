@@ -263,7 +263,7 @@
 			feedbackClass = data.isCorrect ? 'correct-flash' : 'incorrect-flash';
 			setTimeout(() => {
 				nextProblem();
-			}, 250);
+			}, 100);
 		} catch (e: any) {
 			error = e.message;
 			isCheckingAnswer = false;

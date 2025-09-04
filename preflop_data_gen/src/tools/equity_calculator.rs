@@ -29,7 +29,7 @@ pub fn calculate_equity(
     let villain_hand = Hand::new_with_cards(villain_cards);
     let hands = vec![hero_hand, villain_hand];
 
-    let chunk_size = 2000;
+    let chunk_size = 50;
     let results = (0..num_simulations)
         .into_par_iter()
         .chunks(chunk_size)

@@ -1,22 +1,17 @@
-use serde::Serialize;
-
 mod tools;
-mod poker_logic;
+mod poker_objects;
 mod starting_hands;
 mod utils;
 
-use tools::preflop_equity_gen::run_program;
+use tools::generator::preflop_equity_generation;
 
+const CHUNK_SIZE: usize = 50;
 
-#[derive(Serialize)]
-pub struct PreflopEquity {
-    hand1: String,
-    hand2: String,
-    equity: f32,
-}
+/// Command line program for calculating preflop equity for starting hands.
 
-const NUM_OF_SIMULATIONS: u32 = 500;
+fn main() -> std::io::Result<()> {
+    const NUM_OF_SIMULATIONS: u32 = 500;
 
-fn main() {
-    run_program();
+    preflop_equity_generation(NUM_OF_SIMULATIONS)?;
+    Ok(())
 }

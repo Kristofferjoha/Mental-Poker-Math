@@ -1,5 +1,5 @@
 use crate::poker_logic::{card::Card, problem_generator};
-use crate::AppState;
+use crate::utils::app_state::AppState;
 use axum::{extract::{Query, State}, Json};
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -62,7 +62,7 @@ pub async fn get_new_problem(State(app_state): State<AppState>, Query(params): Q
     info!("Correct decision (hidden from client): {}", problem.correct_decision);
 
     app_state
-        .pot_eq_store
+        .pot_equity_cache
         .lock()
         .unwrap()
         .insert(problem_id, problem.clone());
@@ -83,7 +83,7 @@ pub async fn check_answer(
 ) -> Json<CheckAnswerResponse> {
     info!("Checking POT EQ answer for problem ID: {}", payload.problem_id);
     let stored_problem = app_state
-        .pot_eq_store
+        .pot_equity_cache
         .lock()
         .unwrap()
         .remove(&payload.problem_id);

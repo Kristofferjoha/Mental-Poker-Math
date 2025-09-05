@@ -1,5 +1,5 @@
 use crate::poker_logic::{pure_pot_odds_gen};
-use crate::AppState;
+use crate::utils::app_state::AppState;
 use axum::{extract::{Query,State}, Json,};
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -42,7 +42,7 @@ pub async fn get_pure_pot_odds_problem(State(app_state): State<AppState>, Query(
     info!("pot size: {}, bet to call: {}", problem.pot_size, problem.bet_to_call);
 
     app_state
-        .pure_pot_odds_store
+        .pure_pot_odds_cache
         .lock()
         .unwrap()
         .insert(problem_id, problem.clone());
@@ -61,7 +61,7 @@ pub async fn pure_pot_odds_check_answer(
 ) -> Json<PurePotOddsCheckAnswerResponse> {
     info!("Checking POT EQ answer for problem ID: {}", payload.problem_id);
     let stored_problem = app_state
-        .pure_pot_odds_store
+        .pure_pot_odds_cache
         .lock()
         .unwrap()
         .remove(&payload.problem_id);

@@ -1,5 +1,5 @@
 use crate::poker_logic::{card::Card, pure_equity_gen};
-use crate::AppState;
+use crate::utils::app_state::AppState;
 use axum::{extract::{State, Query}, Json};
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -63,7 +63,7 @@ pub async fn get_pure_eq_problem(State(app_state): State<AppState>, Query(params
     info!("Problem Equity (hidden from client): {}", problem.player_equity);
 
     app_state
-        .pure_eq_store
+        .pure_equity_cache
         .lock()
         .unwrap()
         .insert(problem_id, problem.clone());
@@ -83,9 +83,9 @@ pub async fn pure_eq_check_answer(
 ) -> Json<PureEqCheckAnswerResponse> {
     info!("Checking PURE EQ answer for problem ID: {}", payload.problem_id);
 
-    let mut store = app_state.pure_eq_store.lock().unwrap();
+    let mut cache = app_state.pure_equity_cache.lock().unwrap();
 
-    if let Some(problem) = store.get(&payload.problem_id) {
+    if let Some(problem) = cache.get(&payload.problem_id) {
         let player_equity = problem.player_equity;
         let directional_hint_active = problem.directional_hint_active;
 
@@ -106,7 +106,7 @@ pub async fn pure_eq_check_answer(
 
         if is_correct {
             info!("PURE EQ answer is correct. Removing problem ID: {}", payload.problem_id);
-            store.remove(&payload.problem_id);
+            cache.remove(&payload.problem_id);
         }
 
         Json(PureEqCheckAnswerResponse {

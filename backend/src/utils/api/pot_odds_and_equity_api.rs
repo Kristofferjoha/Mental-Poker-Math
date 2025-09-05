@@ -30,7 +30,7 @@ pub struct PotEquityAnswerRequest {
 /// Response returned after checking a submitted Pot Equity answer.
 #[derive(Serialize)]
 pub struct PotEquityAnswerResponse {
-    #[serde(rename = "userDecisionIsCorrect")]
+    #[serde(rename = "userGuessIsCorrect")]
     pub user_decision_is_correct: bool,    // Evaluates the user's submitted decision
     #[serde(rename = "expectedDecision")]
     pub expected_decision: bool,           // The correct action (call/fold)

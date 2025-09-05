@@ -14,7 +14,7 @@
 
 	$: isCorrect = item.response.isCorrect;
 	$: yourDecisionText =
-		item.game === 'pot-odds-ev' && item.userDecision !== undefined
+		item.game === 'pot-odds-equity' && item.userDecision !== undefined
 			? item.userDecision
 				? 'Called'
 				: 'Folded'
@@ -28,7 +28,7 @@
 		<span class="hand-number">Hand #{index + 1}</span>
 		<div class="decision">
 			{yourDecisionText}
-			{#if !isCorrect && item.game === 'pot-odds-ev' && isPotEvResponse(item.response)}
+			{#if !isCorrect && item.game === 'pot-odds-equity' && isPotEvResponse(item.response)}
 				<span class="correct-decision">(Correct: {item.response.correctDecision ? 'Call' : 'Fold'})</span>
 			{:else if !isCorrect && item.game === 'pure-equity' && isPureEqResponse(item.response)}
 				<span class="correct-decision">(Actual: {(item.response.playerEquity).toFixed(1)}%)</span>
@@ -65,7 +65,7 @@
 	</div>
 
 	<div class="details">
-		{#if item.game === 'pot-odds-ev' && isPotEvResponse(item.response)}
+		{#if item.game === 'pot-odds-equity' && isPotEvResponse(item.response)}
 			<span>Pot Odds: <strong>{(item.response.potOdds * 100).toFixed(1)}%</strong></span>
 			<span>Your Equity: <strong>{(item.response.playerEquity * 100).toFixed(1)}%</strong></span>
 		{:else if item.game === 'pure-equity' && isPureEqResponse(item.response)}

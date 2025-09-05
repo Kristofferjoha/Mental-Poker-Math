@@ -1,7 +1,7 @@
 <script lang="ts">
 	const games = [
 		{
-			slug: 'pot-odds-ev',
+			slug: 'pot-odds-equity',
 			title: 'Pot Odds + EQ Decision',
 			description: 'Heads-up all-in scenario. Decide to call or fold based on pot odds vs. equity.'
 		},

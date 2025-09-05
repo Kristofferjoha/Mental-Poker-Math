@@ -116,7 +116,7 @@
 			}
 		],
 		[
-			'pot-odds-ev',
+			'pot-odds-equity',
 			{
 				title: 'Pot Odds + EV Decision',
 				description: 'Cards on the table. Face an all-in and decide if calling is profitable.',
@@ -335,7 +335,7 @@
 				{
 					problem: currentProblem,
 					response: data,
-					game: 'pot-odds-ev',
+					game: 'pot-odds-equity',
 					userDecision: decision
 				}
 			];
@@ -364,7 +364,7 @@
 
         if (game === 'pure-pot-odds') {
             checkPotOddsAnswer(decision);
-        } else if (game === 'pot-odds-ev') {
+        } else if (game === 'pot-odds-equity') {
             checkPotEvAnswer(decision);
         }
     }
@@ -441,7 +441,7 @@
 				</div>
 
 			<!-- Pot Odds + EV Game -->
-			{:else if game === 'pot-odds-ev' && isPotEvProblem(currentProblem)}
+			{:else if game === 'pot-odds-equity' && isPotEvProblem(currentProblem)}
 				<PokerTable problem={currentProblem} />
 				<div class="action-area">
 					<div class="button-group">
@@ -461,7 +461,7 @@
 
 		<!-- Post-Game Results -->
 		<div slot="results">
-			{#if (game === 'pot-odds-ev' || game === 'pure-equity') && sessionHistory.length > 0}
+			{#if (game === 'pot-odds-equity' || game === 'pure-equity') && sessionHistory.length > 0}
 				<div class="history-container">
 					<h3>Hand History</h3>
 					<div class="history-scroll-area">

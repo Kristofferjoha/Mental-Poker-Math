@@ -71,7 +71,7 @@ export type AnyFeedback = PotEvCheckResponse | PureEqCheckResponse | PurePotOdds
 export type CardBasedProblem = PotEvProblem | PureEqProblem;
 
 interface PotEvHistoryItem {
-	game: 'pot-odds-ev';
+	game: 'pot-odds-equity';
 	problem: PotEvProblem;
 	response: PotEvCheckResponse;
 	userDecision: boolean;

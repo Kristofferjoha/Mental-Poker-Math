@@ -9,7 +9,7 @@ pub struct PurePotOddsProblem {
     pub correct_decision: bool,
 }
 
-pub fn generate_pure_pot_odds_problem(allow_overbets: bool) -> PurePotOddsProblem {
+pub fn generate(allow_overbets: bool) -> PurePotOddsProblem {
     let mut rng = rand::rng();
 
     let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;

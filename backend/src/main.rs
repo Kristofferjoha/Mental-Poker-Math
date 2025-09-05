@@ -4,6 +4,7 @@ use tracing;
 mod poker_logic;
 mod utils;
 mod program;
+mod problems;
 
 #[tokio::main]
 async fn main() {

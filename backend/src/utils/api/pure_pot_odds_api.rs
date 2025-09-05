@@ -1,13 +1,14 @@
-use crate::poker_logic::{pure_pot_odds_gen};
-use crate::utils::app_state::AppState;
 use axum::{extract::{Query,State}, Json,};
 use serde::{Deserialize, Serialize};
-use tracing::info;
 use uuid::Uuid;
 use std::collections::HashMap;
 
+use crate::problems::pure_pot_odds::generate;
+use crate::utils::app_state::AppState;
+
+/// Response returned when a new Pure Pot Odds problem is generated.
 #[derive(Serialize)]
-pub struct PurePotOddsProblemRequest {
+pub struct PurePotOddsProblemResponse {
     pub problem_id: Uuid,
     pub pot_size: u32,
     pub bet_to_call: u32,
@@ -15,39 +16,46 @@ pub struct PurePotOddsProblemRequest {
 }
 
 #[derive(Deserialize)]
-pub struct PurePotOddsCheckAnswerPayload {
+pub struct PurePotOddsAnswerRequest {
     #[serde(rename = "problemId")]
     pub problem_id: Uuid,
-    pub decision: bool,
+    pub user_decision: bool,
 }
 
 #[derive(Serialize)]
-pub struct PurePotOddsCheckAnswerResponse {
-    #[serde(rename = "isCorrect")]
-    pub is_correct: bool,
-    #[serde(rename = "correctDecision")]
-    pub correct_decision: bool,
+pub struct PurePotOddsAnswerResponse {
+    #[serde(rename = "userDecisionIsCorrect")] // used for score game score
+    pub user_decision_is_correct: bool,
+    #[serde(rename = "expectedDecision")] // used for potential session reviews, correct decision shown
+    pub expected_decision: bool,
     #[serde(rename = "potOdds")]
     pub pot_odds: f64,
 }
 
-pub async fn get_pure_pot_odds_problem(State(app_state): State<AppState>, Query(params): Query<HashMap<String, String>>) -> Json<PurePotOddsProblemRequest> {
-    let allow_overbets = params.get("allowOverbets").map(|v| v == "true").unwrap_or(true);
+/// Generates a new Pure Pot Odds problem.
+///
+/// `allowOverbets` (optional, default `false`): whether to allow overbets in the problem.
+///
+/// Returns a `PurePotOddsProblemResponse` containing the problem ID, pot size, bet to call, and equity.
+/// The generate_pure_pot_odds_problem also stores correct_decision but wont be sent to frontend.
+pub async fn generate_pure_pot_odds_problem(
+    State(app_state): State<AppState>,
+    Query(params): Query<HashMap<String, String>>,
+) -> Json<PurePotOddsProblemResponse> {
+    let allow_overbets = params.get("allowOverbets").map(|v| v == "true").unwrap_or(false);
 
-    let problem = pure_pot_odds_gen::generate_pure_pot_odds_problem(allow_overbets);
+    let problem = generate(allow_overbets);
     let problem_id = Uuid::new_v4();
 
-    info!("Generated Pure Pot Odds problem ID: {}", problem_id);
-    info!("Correct decision (hidden from client): {}", problem.correct_decision);
-    info!("pot size: {}, bet to call: {}", problem.pot_size, problem.bet_to_call);
+    tracing::debug!("Generated problem ID: {}, correct decision: {}", problem_id, problem.correct_decision);
 
     app_state
         .pure_pot_odds_cache
         .lock()
-        .unwrap()
+        .expect("mutex poisoned")
         .insert(problem_id, problem.clone());
 
-    Json(PurePotOddsProblemRequest {
+    Json(PurePotOddsProblemResponse {
         problem_id,
         pot_size: problem.pot_size,
         bet_to_call: problem.bet_to_call,
@@ -55,31 +63,40 @@ pub async fn get_pure_pot_odds_problem(State(app_state): State<AppState>, Query(
     })
 }
 
-pub async fn pure_pot_odds_check_answer(
+/// Checks the answer to a previously generated Pure Pot Odds problem.
+///
+/// Accepts a `PurePotOddsAnswerRequest` with the problem ID and the user's decision.
+/// Returns `PurePotOddsAnswerResponse` indicating correctness, the correct decision, and the pot odds.
+/// payload corresponds to user answer request data, and problem corresponds to the cached problem (UUID)
+/// Checks if user decision matches correct decision in problem
+pub async fn check_pure_pot_odds_answer(
     State(app_state): State<AppState>,
-    Json(payload): Json<PurePotOddsCheckAnswerPayload>,
-) -> Json<PurePotOddsCheckAnswerResponse> {
-    info!("Checking POT EQ answer for problem ID: {}", payload.problem_id);
+    Json(payload): Json<PurePotOddsAnswerRequest>,
+) -> Json<PurePotOddsAnswerResponse> {
+    tracing::info!("Checking POT EQ answer for problem ID: {}", payload.problem_id);
+
     let stored_problem = app_state
         .pure_pot_odds_cache
         .lock()
-        .unwrap()
+        .expect("mutex poisoned")
         .remove(&payload.problem_id);
 
-    if let Some(problem) = stored_problem {
-        let is_correct = payload.decision == problem.correct_decision;
-
-        Json(PurePotOddsCheckAnswerResponse {
-            is_correct,
-            correct_decision: problem.correct_decision,
-            pot_odds: problem.pot_odds,
-        })
-    } else {
-        info!("POT EQ Problem ID not found or expired: {}", payload.problem_id);
-        Json(PurePotOddsCheckAnswerResponse {
-            is_correct: false,
-            correct_decision: false,
-            pot_odds: 0.0,
-        })
+    match stored_problem {
+        Some(problem) => {
+            let user_decision_is_correct = payload.user_decision == problem.correct_decision;
+            Json(PurePotOddsAnswerResponse {
+                user_decision_is_correct,
+                expected_decision: problem.correct_decision,
+                pot_odds: problem.pot_odds,
+            })
+        }
+        None => {
+            tracing::warn!("POT EQ Problem ID not found or expired: {}", payload.problem_id);
+            Json(PurePotOddsAnswerResponse {
+                user_decision_is_correct: false,
+                expected_decision: false,
+                pot_odds: 0.0,
+            })
+        }
     }
 }

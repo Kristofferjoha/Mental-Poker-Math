@@ -1,9 +1,9 @@
 use std::{collections::HashMap, sync::{Arc, Mutex}};
 use uuid::Uuid;
 
-use crate::poker_logic::problem_generator::PotEquityProblem;
-use crate::poker_logic::pure_equity_gen::PureEqEquityProblem;
-use crate::poker_logic::pure_pot_odds_gen::PurePotOddsProblem;
+use crate::problems::pot_equity::PotEquityProblem;
+use crate::problems::pure_equity::PureEqEquityProblem;
+use crate::problems::pure_pot_odds::PurePotOddsProblem;
 use crate::poker_logic::preflop_lookup::PreflopEquity;
 
 /// Centralized, thread-safe application state for the Axum HTTP server.

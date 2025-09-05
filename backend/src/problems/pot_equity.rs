@@ -40,7 +40,7 @@ pub struct PotEquityProblem {
     pub correct_decision: bool,
 }
 
-pub fn generate_pot_eq_problem(
+pub fn generate(
     allowed_streets_str: Vec<String>,
     allow_overbets: bool,
     preflop_data: &[PreflopEquity],

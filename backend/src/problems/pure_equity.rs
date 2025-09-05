@@ -39,7 +39,7 @@ impl Street {
     }
 }
 
-pub fn generate_pure_eq_problem(
+pub fn generate(
     allowed_streets_str: Vec<String>,
     preflop_data: &[PreflopEquity],
     tolerance: f32,

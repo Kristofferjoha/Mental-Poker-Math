@@ -6,10 +6,10 @@
 		AnyFeedback,
 		PurePotOddsProblem,
 		PurePotOddsCheckResponse,
-		PureEqProblem,
-		PureEqCheckResponse,
-		PotEvProblem,
-		PotEvCheckResponse,
+		PureEquityProblem,
+		PureEquityCheckResponse,
+		PotEquityProblem,
+		PotEquityCheckResponse,
 		HistoryItem,
 		OptionConfig
 	} from '$lib/types';
@@ -68,8 +68,8 @@
 				title: 'Pure Equity Trainer',
 				description: "See a heads-up all-in scenario and estimate your hand's raw equity.",
 				api: {
-					getProblem: '/api/pure-eq-get-problem',
-					checkAnswer: '/api/pure-eq-check-answer'
+					getProblem: '/api/pure-equity-get-problem',
+					checkAnswer: '/api/pure-equity-check-answer'
 				},
 				options: [
 					{
@@ -121,8 +121,8 @@
 				title: 'Pot Odds + EV Decision',
 				description: 'Cards on the table. Face an all-in and decide if calling is profitable.',
 				api: {
-					getProblem: '/api/get-problem',
-					checkAnswer: '/api/check-answer'
+					getProblem: '/api/pot-equity-get-problem',
+					checkAnswer: '/api/pot-equity-check-answer'
 				},
 				options: [
 					{
@@ -176,10 +176,10 @@
 	function isPurePotOddsProblem(p: AnyProblem | null): p is PurePotOddsProblem {
 		return !!p && 'equity' in p;
 	}
-	function isPureEqProblem(p: AnyProblem | null): p is PureEqProblem {
+	function isPureEquityProblem(p: AnyProblem | null): p is PureEquityProblem {
 		return !!p && 'player_hand' in p && !('pot_size' in p);
 	}
-	function isPotEvProblem(p: AnyProblem | null): p is PotEvProblem {
+	function isPotEquityProblem(p: AnyProblem | null): p is PotEquityProblem {
 		return !!p && 'pot_size' in p && 'player_hand' in p;
 	}
 	function isPurePotOddsFeedback(f: AnyFeedback | null): f is PurePotOddsCheckResponse {
@@ -258,9 +258,9 @@
 			});
 			if (!res.ok) throw new Error(`Server error: ${res.status}`);
 			const data: PurePotOddsCheckResponse = await res.json();
-			if (data.isCorrect) score++;
+			if (data.userGuessIsCorrect) score++;
 
-			feedbackClass = data.isCorrect ? 'correct-flash' : 'incorrect-flash';
+			feedbackClass = data.userGuessIsCorrect ? 'correct-flash' : 'incorrect-flash';
 			setTimeout(() => {
 				nextProblem();
 			}, 100);
@@ -271,7 +271,7 @@
 	}
 
 	async function checkEquityAnswer() {
-		if (isCheckingAnswer || !currentProblem || !config || !isPureEqProblem(currentProblem)) return;
+		if (isCheckingAnswer || !currentProblem || !config || !isPureEquityProblem(currentProblem)) return;
 
 		const guessVal = parseFloat(equityGuess);
 		if (isNaN(guessVal)) return;
@@ -284,7 +284,7 @@
 				body: JSON.stringify({ problemId: currentProblem.problem_id, guess_value: guessVal })
 			});
 			if (!res.ok) throw new Error(`Server error: ${res.status}`);
-			const data: PureEqCheckResponse = await res.json();
+			const data: PureEquityCheckResponse = await res.json();
 
 			directionalHint = data.directionalHint;
 
@@ -298,11 +298,13 @@
 				}
 			];
 
-			if (data.isCorrect) {
+			if (data.userGuessIsCorrect) {
+				console.log('Correct answer!');
 				score++;
 				feedbackClass = 'correct';
 				setTimeout(nextProblem, 400);
 			} else {
+				console.log('Incorrect answer.');
 				feedbackClass = 'incorrect';
 				isCheckingAnswer = false;
 				await tick();
@@ -314,8 +316,8 @@
 		}
 	}
 
-	async function checkPotEvAnswer(decision: boolean) {
-		if (isCheckingAnswer || !currentProblem || !config || !isPotEvProblem(currentProblem)) return;
+	async function checkPotEquityAnswer(decision: boolean) {
+		if (isCheckingAnswer || !currentProblem || !config || !isPotEquityProblem(currentProblem)) return;
 		isCheckingAnswer = true;
 		try {
 			const res = await fetch(config.api.checkAnswer, {
@@ -324,9 +326,11 @@
 				body: JSON.stringify({ problemId: currentProblem.problem_id, decision })
 			});
 			if (!res.ok) throw new Error(`Server error: ${res.status}`);
-			const data: PotEvCheckResponse = await res.json();
+			const data: PotEquityCheckResponse = await res.json();
 
-			if (data.isCorrect) {
+			console.log('Pot Equity Answer Response:', data); // Debugging log
+			if (data.userGuessIsCorrect) {
+				console.log('Correct answer!');
 				score++;
 			}
 
@@ -365,7 +369,7 @@
         if (game === 'pure-pot-odds') {
             checkPotOddsAnswer(decision);
         } else if (game === 'pot-odds-equity') {
-            checkPotEvAnswer(decision);
+            checkPotEquityAnswer(decision);
         }
     }
 
@@ -396,10 +400,10 @@
 				<PotOddsDisplay currentProblem={currentProblem} />
 				<div class="action-area">
 					{#if feedback && isPurePotOddsFeedback(feedback)}
-						<div class="feedback-box" class:correct={feedback.isCorrect} class:wrong={!feedback.isCorrect}>
-							<p class="feedback-title">{feedback.isCorrect ? 'Correct!' : 'Incorrect!'}</p>
+						<div class="feedback-box" class:correct={feedback.userGuessIsCorrect} class:wrong={!feedback.userGuessIsCorrect}>
+							<p class="feedback-title">{feedback.userGuessIsCorrect ? 'Correct!' : 'Incorrect!'}</p>
 							<p>
-								Correct decision: <strong>{feedback.correctDecision ? 'CALL' : 'FOLD'}</strong>.
+								Correct decision: <strong>{feedback.expectedDecision ? 'CALL' : 'FOLD'}</strong>.
 							</p>
 							<p>Required equity: <strong>{feedback.potOdds.toFixed(1)}%</strong></p>
 						</div>
@@ -412,7 +416,7 @@
 				</div>
 
 			<!-- Pure Equity Game -->
-			{:else if game === 'pure-equity' && isPureEqProblem(currentProblem)}
+			{:else if game === 'pure-equity' && isPureEquityProblem(currentProblem)}
 				<PokerTable problem={currentProblem} />
 				<div class="action-area">
 
@@ -441,12 +445,12 @@
 				</div>
 
 			<!-- Pot Odds + EV Game -->
-			{:else if game === 'pot-odds-equity' && isPotEvProblem(currentProblem)}
+			{:else if game === 'pot-odds-equity' && isPotEquityProblem(currentProblem)}
 				<PokerTable problem={currentProblem} />
 				<div class="action-area">
 					<div class="button-group">
-						<button class="call-btn" on:click={() => checkPotEvAnswer(true)} disabled={isCheckingAnswer}>CALL <kbd>C</kbd></button>
-						<button class="fold-btn" on:click={() => checkPotEvAnswer(false)} disabled={isCheckingAnswer}>FOLD <kbd>F</kbd></button>
+						<button class="call-btn" on:click={() => checkPotEquityAnswer(true)} disabled={isCheckingAnswer}>CALL <kbd>C</kbd></button>
+						<button class="fold-btn" on:click={() => checkPotEquityAnswer(false)} disabled={isCheckingAnswer}>FOLD <kbd>F</kbd></button>
 					</div>
 				</div>
 			{/if}

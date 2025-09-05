@@ -1,18 +1,18 @@
 <script lang="ts">
-	import type { HistoryItem, PotEvCheckResponse, PureEqCheckResponse } from '$lib/types';
+	import type { HistoryItem, PotEquityCheckResponse, PureEquityCheckResponse } from '$lib/types';
 	import Card from '$lib/components/deck.svelte';
 
 	export let item: HistoryItem;
 	export let index: number;
 
-	function isPotEvResponse(response: HistoryItem['response']): response is PotEvCheckResponse {
+	function isPotEquityResponse(response: HistoryItem['response']): response is PotEquityCheckResponse {
 		return 'correctDecision' in response;
 	}
-	function isPureEqResponse(response: HistoryItem['response']): response is PureEqCheckResponse {
+	function isPureEquityResponse(response: HistoryItem['response']): response is PureEquityCheckResponse {
 		return !('correctDecision' in response);
 	}
 
-	$: isCorrect = item.response.isCorrect;
+	$: isCorrect = item.response.userGuessIsCorrect;
 	$: yourDecisionText =
 		item.game === 'pot-odds-equity' && item.userDecision !== undefined
 			? item.userDecision
@@ -28,9 +28,9 @@
 		<span class="hand-number">Hand #{index + 1}</span>
 		<div class="decision">
 			{yourDecisionText}
-			{#if !isCorrect && item.game === 'pot-odds-equity' && isPotEvResponse(item.response)}
-				<span class="correct-decision">(Correct: {item.response.correctDecision ? 'Call' : 'Fold'})</span>
-			{:else if !isCorrect && item.game === 'pure-equity' && isPureEqResponse(item.response)}
+			{#if !isCorrect && item.game === 'pot-odds-equity' && isPotEquityResponse(item.response)}
+				<span class="correct-decision">(Correct: {item.response.expectedDecision ? 'Call' : 'Fold'})</span>
+			{:else if !isCorrect && item.game === 'pure-equity' && isPureEquityResponse(item.response)}
 				<span class="correct-decision">(Actual: {(item.response.playerEquity).toFixed(1)}%)</span>
 			{/if}
 		</div>
@@ -65,10 +65,10 @@
 	</div>
 
 	<div class="details">
-		{#if item.game === 'pot-odds-equity' && isPotEvResponse(item.response)}
+		{#if item.game === 'pot-odds-equity' && isPotEquityResponse(item.response)}
 			<span>Pot Odds: <strong>{(item.response.potOdds * 100).toFixed(1)}%</strong></span>
 			<span>Your Equity: <strong>{(item.response.playerEquity * 100).toFixed(1)}%</strong></span>
-		{:else if item.game === 'pure-equity' && isPureEqResponse(item.response)}
+		{:else if item.game === 'pure-equity' && isPureEquityResponse(item.response)}
 			<span>Your Equity: <strong>{(item.response.playerEquity).toFixed(1)}%</strong></span>
 		{/if}
 	</div>

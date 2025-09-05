@@ -11,7 +11,7 @@ export interface Card {
 // 2. POT ODDS + EV DECISION GAME (/pot-odds-ev)
 // ===================================================================
 
-export interface PotEvProblem {
+export interface PotEquityProblem {
 	problem_id: string;
 	player_hand: Card[];
 	opponent_hand: Card[];
@@ -20,9 +20,9 @@ export interface PotEvProblem {
 	bet_to_call: number;
 }
 
-export interface PotEvCheckResponse {
-	isCorrect: boolean;
-	correctDecision: boolean;
+export interface PotEquityCheckResponse {
+	userGuessIsCorrect: boolean;
+    expectedDecision: boolean;
 	playerEquity: number;
 	potOdds: number; 
 }
@@ -31,15 +31,15 @@ export interface PotEvCheckResponse {
 // 3. PURE EQUITY GAME (/pure-equity)
 // ===================================================================
 
-export interface PureEqProblem {
+export interface PureEquityProblem {
 	problem_id: string;
 	player_hand: Card[];
 	opponent_hand: Card[];
 	board: Card[];
 }
 
-export interface PureEqCheckResponse {
-	isCorrect: boolean;
+export interface PureEquityCheckResponse {
+	userGuessIsCorrect: boolean;
 	playerEquity: number;
 	directionalHint: 'Higher' | 'Lower' | 'Not-Active';
 }
@@ -57,8 +57,8 @@ export interface PurePotOddsProblem {
 }
 
 export interface PurePotOddsCheckResponse {
-	isCorrect: boolean;
-	correctDecision: boolean;
+	userGuessIsCorrect: boolean;
+	expectedDecision: boolean;
 	potOdds: number; 
 }
 
@@ -66,25 +66,25 @@ export interface PurePotOddsCheckResponse {
 // 5. SHARED TYPES
 // ===================================================================
 
-export type AnyProblem = PotEvProblem | PureEqProblem | PurePotOddsProblem;
-export type AnyFeedback = PotEvCheckResponse | PureEqCheckResponse | PurePotOddsCheckResponse;
-export type CardBasedProblem = PotEvProblem | PureEqProblem;
+export type AnyProblem = PotEquityProblem | PureEquityProblem | PurePotOddsProblem;
+export type AnyFeedback = PotEquityCheckResponse | PureEquityCheckResponse | PurePotOddsCheckResponse;
+export type CardBasedProblem = PotEquityProblem | PureEquityProblem;
 
-interface PotEvHistoryItem {
+interface PotEquityHistoryItem {
 	game: 'pot-odds-equity';
-	problem: PotEvProblem;
-	response: PotEvCheckResponse;
+	problem: PotEquityProblem;
+	response: PotEquityCheckResponse;
 	userDecision: boolean;
 }
 
-interface PureEqHistoryItem {
+interface PureEquityHistoryItem {
 	game: 'pure-equity';
-	problem: PureEqProblem;
-	response: PureEqCheckResponse;
+	problem: PureEquityProblem;
+	response: PureEquityCheckResponse;
 	userGuess: number;
 }
 
-export type HistoryItem = PotEvHistoryItem | PureEqHistoryItem;
+export type HistoryItem = PotEquityHistoryItem | PureEquityHistoryItem;
 
 export type OptionChoice = { label: string; value: string | number | boolean };
 

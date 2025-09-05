@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { Card as CardType, PotEvProblem, PureEqProblem } from '$lib/types';
+	import type { Card as CardType, PotEquityProblem, PureEquityProblem } from '$lib/types';
 	import Card from '$lib/components/deck.svelte';
 
-	export let problem: PotEvProblem | PureEqProblem | null = null;
+	export let problem: PotEquityProblem | PureEquityProblem | null = null;
 
 	function padHand(cards: CardType[] = [], length: number): (CardType | null)[] {
 		const hand: (CardType | null)[] = [...cards];
@@ -28,11 +28,11 @@
 		}
 	}
 
-	function isPotEvProblem(p: any): p is PotEvProblem {
+	function isPotEquityProblem(p: any): p is PotEquityProblem {
 		return p && p.pot_size !== undefined;
 	}
 	
-	$: potAfterCall = problem && isPotEvProblem(problem) ? problem.pot_size + problem.bet_to_call : 0;
+	$: potAfterCall = problem && isPotEquityProblem(problem) ? problem.pot_size + problem.bet_to_call : 0;
 </script>
 
 <div class="poker-table-wrapper">
@@ -42,7 +42,7 @@
 				<div class="player-area opponent">
 					<div class="player-label">
 						<span class="player-name">Opponent</span>
-						{#if isPotEvProblem(problem)}
+						{#if isPotEquityProblem(problem)}
 							<div class="bet-chip">
 								<span class="bet-amount">{problem.bet_to_call}</span>
 								<span class="bet-label">All-in</span>
@@ -61,7 +61,7 @@
 				</div>
 
 				<div class="community-area">
-					{#if isPotEvProblem(problem)}
+					{#if isPotEquityProblem(problem)}
 						<div class="pot-info">
 							<div class="pot-chip">
 								<span class="pot-amount">{potAfterCall}</span>
@@ -93,7 +93,7 @@
 					</div>
 					<div class="player-label">
 						<span class="player-name">Your Hand</span>
-						{#if isPotEvProblem(problem)}
+						{#if isPotEquityProblem(problem)}
 							<div class="info-chip green">
 								<span>{problem.bet_to_call} to call</span>
 							</div>

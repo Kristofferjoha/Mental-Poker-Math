@@ -43,8 +43,8 @@ pub async fn run() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/api/pot-equity-get-problem", get(api::generate_pot_equity_problem)) // Corrected
         .route("/api/pot-equity-check-answer", post(api::check_pot_equity_answer)) // Corrected
-        .route("/api/pure-eq-get-problem", get(api::generate_pure_equity_problem))
-        .route("/api/pure-eq-check-answer", post(api::check_pure_equity_answer))
+        .route("/api/pure-equity-get-problem", get(api::generate_pure_equity_problem))
+        .route("/api/pure-equity-check-answer", post(api::check_pure_equity_answer))
         .route("/api/pure-pot-odds-get-problem", get(api::generate_pure_pot_odds_problem))
         .route("/api/pure-pot-odds-check-answer", post(api::check_pure_pot_odds_answer))
         .with_state(app_state)

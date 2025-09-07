@@ -75,7 +75,7 @@ pub fn calculate_equity(
     (wins as f32 + ties as f32 / 2.0) / num_simulations as f32
 }
 
-/// Maps your internal `Rank` enum → `rs_poker::core::Value`.
+/// Maps the internal `Rank` enum → `rs_poker::core::Value`.
 impl From<Rank> for Value {
     fn from(rank: Rank) -> Self {
         match rank {
@@ -96,7 +96,7 @@ impl From<Rank> for Value {
     }
 }
 
-/// Maps your internal `Suit` enum → `rs_poker::core::Suit`.
+/// Maps the internal `Suit` enum → `rs_poker::core::Suit`.
 impl From<MySuit> for Suit {
     fn from(suit: MySuit) -> Self {
         match suit {

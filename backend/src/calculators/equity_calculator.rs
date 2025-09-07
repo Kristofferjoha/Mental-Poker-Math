@@ -1,8 +1,8 @@
-use crate::poker_logic::{
+use crate::poker_core::{
     card::Card,
     deck::Deck,
-    hand_evaluator::evaluate_hand,
 };
+use crate::calculators::hand_evaluator::evaluate_hand;
 use rand::rng;
 use rand::seq::SliceRandom;
 use rayon::prelude::*;

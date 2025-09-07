@@ -1,9 +1,7 @@
-use crate::poker_logic::{
-    card::{Card, Rank, Suit},
-    deck::Deck,
-    equity_calculator,
-    preflop_lookup::PreflopEquity,
-};
+use crate::poker_core::{card::{Card, Rank, Suit}, deck::Deck};
+use crate::calculators::equity_calculator;
+use crate::preflop_data::preflop_lookup::PreflopEquity;
+
 use rand::prelude::IndexedRandom;
 use rand::{Rng, rng};
 use tracing::{error, info};

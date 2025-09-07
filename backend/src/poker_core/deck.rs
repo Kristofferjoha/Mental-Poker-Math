@@ -1,4 +1,4 @@
-use crate::poker_logic::card::{Card, Rank, Suit};
+use crate::poker_core::card::{Card, Rank, Suit};
 
 use rand::seq::SliceRandom;
 use rand::Rng;

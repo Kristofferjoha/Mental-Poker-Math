@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::problems::pot_equity::PotEquityProblem;
 use crate::problems::pure_equity::PureEqEquityProblem;
 use crate::problems::pure_pot_odds::PurePotOddsProblem;
-use crate::poker_logic::preflop_lookup::PreflopEquity;
+use crate::preflop_data::preflop_lookup::PreflopEquity;
 
 /// Centralized, thread-safe application state for the Axum HTTP server.
 /// `AppState` consolidates all shared mutable and read-only data required by request handlers.

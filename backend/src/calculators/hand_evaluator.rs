@@ -1,4 +1,4 @@
-use crate::poker_logic::card::{Card, Suit};
+use crate::poker_core::card::{Card, Suit};
 use serde::{Serialize, Deserialize};
 use std::hash::Hash;
 

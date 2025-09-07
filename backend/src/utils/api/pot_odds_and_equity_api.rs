@@ -4,7 +4,7 @@ use tracing::{info, debug, warn};
 use uuid::Uuid;
 use std::collections::HashMap;
 
-use crate::poker_logic::card::Card;
+use crate::poker_core::card::Card;
 use crate::problems::pot_equity::generate;
 use crate::utils::app_state::AppState;
 

@@ -5,7 +5,7 @@ use std::fs::read_to_string;
 use tracing::info;
 
 
-use crate::poker_logic::preflop_lookup::PreflopEquity;
+use crate::preflop_data::preflop_lookup::PreflopEquity;
 use crate::utils::{api, app_state::AppState};
 
 /// Main entrypoint for the Axum application.
@@ -14,7 +14,7 @@ use crate::utils::{api, app_state::AppState};
 pub async fn run() -> anyhow::Result<()> {
     // Load preflop equity data from JSON
     info!("Loading preflop equity data...");
-    let preflop_data_string = read_to_string("preflop_equity.json")?;
+    let preflop_data_string = read_to_string("src/preflop_data/preflop_equity.json")?;
     let preflop_equity_data: Vec<PreflopEquity> = serde_json::from_str(&preflop_data_string)?;
     info!("Loaded {} entries", preflop_equity_data.len());
 

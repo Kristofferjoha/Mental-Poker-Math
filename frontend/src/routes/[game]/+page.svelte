@@ -248,17 +248,18 @@
 	}
 
 	async function checkPotOddsAnswer(decision: boolean) {
+		console.log('User decision (Pot Odds):', decision); // Debugging log
 		if (isCheckingAnswer || !currentProblem || !config || !isPurePotOddsProblem(currentProblem)) return;
 		isCheckingAnswer = true;
 		try {
 			const res = await fetch(config.api.checkAnswer, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ problemId: currentProblem.problem_id, decision })
+				body: JSON.stringify({ problemId: currentProblem.problem_id, user_decision: decision })
 			});
 			if (!res.ok) throw new Error(`Server error: ${res.status}`);
 			const data: PurePotOddsCheckResponse = await res.json();
-			if (data.userGuessIsCorrect) score++;
+			if (data.userGuessIsCorrect) score++
 
 			feedbackClass = data.userGuessIsCorrect ? 'correct-flash' : 'incorrect-flash';
 			setTimeout(() => {

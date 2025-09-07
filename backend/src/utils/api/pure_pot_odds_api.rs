@@ -24,7 +24,7 @@ pub struct PurePotOddsAnswerRequest {
 
 #[derive(Serialize)]
 pub struct PurePotOddsAnswerResponse {
-    #[serde(rename = "userDecisionIsCorrect")] // used for score game score
+    #[serde(rename = "userGuessIsCorrect")] // used for score game score
     pub user_decision_is_correct: bool,
     #[serde(rename = "expectedDecision")] // used for potential session reviews, correct decision shown
     pub expected_decision: bool,

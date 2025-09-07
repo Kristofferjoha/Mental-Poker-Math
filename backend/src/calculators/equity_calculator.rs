@@ -1,12 +1,12 @@
 use crate::poker_core::{
-    card::Card,
+    card::{Card, Rank, Suit},
     deck::Deck,
 };
-use crate::calculators::hand_evaluator::evaluate_hand;
-use rand::rng;
+use poker_eval::eval::seven as seven_eval;
+use poker_eval::eval::seven::TableSeven;
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
-use std::cmp::Ordering;
+use std::sync::Arc;
 
 pub struct Equity {
     pub wins: u32,
@@ -16,8 +16,25 @@ pub struct Equity {
 
 impl Equity {
     pub fn equity(&self) -> f32 {
-        (self.wins as f32 + self.ties as f32 / 2.0) / self.total_sims as f32
+        if self.total_sims == 0 {
+            0.0
+        } else {
+            (self.wins as f32 + self.ties as f32 * 0.5) / self.total_sims as f32
+        }
     }
+}
+
+fn card_to_poker_eval_id(card: &Card) -> usize {
+    let rank_index = match card.rank {
+        Rank::Two => 0, Rank::Three => 1, Rank::Four => 2, Rank::Five => 3,
+        Rank::Six => 4, Rank::Seven => 5, Rank::Eight => 6, Rank::Nine => 7,
+        Rank::Ten => 8, Rank::Jack => 9, Rank::Queen => 10, Rank::King => 11,
+        Rank::Ace => 12,
+    };
+    let suit_index = match card.suit {
+        Suit::Clubs => 0, Suit::Diamonds => 1, Suit::Hearts => 2, Suit::Spades => 3,
+    };
+    rank_index * 4 + suit_index
 }
 
 pub fn calculate_equity(
@@ -25,49 +42,67 @@ pub fn calculate_equity(
     opponent_hand: &[Card],
     board: &[Card],
     num_simulations: u32,
+    tables: &Arc<TableSeven>,
 ) -> Equity {
-    let base_deck = {
-    let mut d = Deck::new();
-    d.remove_cards(player_hand);
-    d.remove_cards(opponent_hand);
-    d.remove_cards(board);
-    d
-};
+    if board.len() == 5 {
+        let player_cards_vec: Vec<usize> = player_hand.iter().chain(board.iter()).map(card_to_poker_eval_id).collect();
+        let opponent_cards_vec: Vec<usize> = opponent_hand.iter().chain(board.iter()).map(card_to_poker_eval_id).collect();
 
-let results = (0..num_simulations)
-    .into_par_iter()
-    .map_init(
-        || (rng(), base_deck.clone()),
-        |(rng, deck), _| {
-            let mut local_deck = deck.clone();
-            local_deck.cards.shuffle(rng);
+        let player_cards: [usize; 7] = player_cards_vec.try_into().expect("Hand should have 7 cards");
+        let opponent_cards: [usize; 7] = opponent_cards_vec.try_into().expect("Hand should have 7 cards");
 
-            let cards_to_deal = 5 - board.len();
-            let simulated_board: Vec<_> = board.iter()
-                .cloned()
-                .chain(local_deck.cards.iter().take(cards_to_deal).cloned())
-                .collect();
+        let player_rank = seven_eval::get_rank(tables, player_cards);
+        let opponent_rank = seven_eval::get_rank(tables, opponent_cards);
 
-            let mut player_hand_buf = [Card::default(); 7];
-            player_hand_buf[..2].copy_from_slice(player_hand);
-            player_hand_buf[2..].copy_from_slice(&simulated_board);
+        let (wins, ties) = if player_rank > opponent_rank {
+            (1, 0)
+        } else if player_rank < opponent_rank {
+            (0, 0)
+        } else {
+            (0, 1)
+        };
+        return Equity { wins, ties, total_sims: 1 };
+    }
 
-            let mut opponent_hand_buf = [Card::default(); 7];
-            opponent_hand_buf[..2].copy_from_slice(opponent_hand);
-            opponent_hand_buf[2..].copy_from_slice(&simulated_board);
+    let remaining_deck = {
+        let mut d = Deck::new();
+        d.remove_cards(player_hand);
+        d.remove_cards(opponent_hand);
+        d.remove_cards(board);
+        d
+    };
 
-            let player_rank = evaluate_hand(&player_hand_buf);
-            let opponent_rank = evaluate_hand(&opponent_hand_buf);
+    let results = (0..num_simulations)
+        .into_par_iter()
+        .map_init(
+            || rand::rng(),
+            |rng, _| {
+                let mut deck_copy = remaining_deck.clone();
+                deck_copy.cards.shuffle(rng);
 
-            match player_rank.cmp(&opponent_rank) {
-                Ordering::Greater => (1, 0),
-                Ordering::Equal => (0, 1),
-                Ordering::Less => (0, 0),
-            }
-        }
-    )
-    .reduce(|| (0, 0), |(w1, t1), (w2, t2)| (w1 + w2, t1 + t2));
+                let cards_to_draw = 5 - board.len();
+                let mut final_board = board.to_vec();
+                final_board.extend(deck_copy.cards.iter().take(cards_to_draw));
+                
+                let player_eval_hand_vec: Vec<usize> = player_hand.iter().chain(final_board.iter()).map(card_to_poker_eval_id).collect();
+                let opponent_eval_hand_vec: Vec<usize> = opponent_hand.iter().chain(final_board.iter()).map(card_to_poker_eval_id).collect();
 
+                let player_eval_hand: [usize; 7] = player_eval_hand_vec.try_into().expect("Hand should have 7 cards");
+                let opponent_eval_hand: [usize; 7] = opponent_eval_hand_vec.try_into().expect("Hand should have 7 cards");
+
+                let player_rank = seven_eval::get_rank(tables, player_eval_hand);
+                let opponent_rank = seven_eval::get_rank(tables, opponent_eval_hand);
+
+                if player_rank > opponent_rank {
+                    (1, 0)
+                } else if player_rank == opponent_rank {
+                    (0, 1)
+                } else {
+                    (0, 0)
+                }
+            },
+        )
+        .reduce(|| (0, 0), |(total_wins, total_ties), (win, tie)| (total_wins + win, total_ties + tie));
 
     Equity {
         wins: results.0,

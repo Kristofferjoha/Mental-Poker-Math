@@ -70,6 +70,7 @@ pub async fn generate_pure_equity_problem(
         &app_state.preflop_equity_data,
         tolerance,
         directional_hints_active,
+        &app_state.seven_card_tables,
     );
 
     let problem_id = Uuid::new_v4();

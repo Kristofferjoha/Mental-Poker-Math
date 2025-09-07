@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::{Arc, Mutex}};
 use uuid::Uuid;
+use poker_eval::eval::seven::TableSeven;
 
 use crate::problems::pot_equity::PotEquityProblem;
 use crate::problems::pure_equity::PureEqEquityProblem;
@@ -14,4 +15,5 @@ pub struct AppState {
     pub pure_equity_cache: Arc<Mutex<HashMap<Uuid, PureEqEquityProblem>>>,
     pub pure_pot_odds_cache: Arc<Mutex<HashMap<Uuid, PurePotOddsProblem>>>,
     pub preflop_equity_data: Arc<Vec<PreflopEquity>>,
+    pub seven_card_tables: Arc<TableSeven>,
 }

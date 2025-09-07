@@ -21,3 +21,4 @@ strum = "0.26"
 strum_macros = "0.26"
 uuid = { version = "1.17.0", features = ["v4", "serde"] }
 anyhow = "1.0.99"
+poker_eval = "0.1.0"

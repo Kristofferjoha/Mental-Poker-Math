@@ -1,7 +1,9 @@
 use rand::{prelude::*, Rng};
 use tracing::{error, info};
+use poker_eval::eval::seven::TableSeven;
+use std::sync::Arc;
 
-use crate::calculators::equity_calculator;
+use crate::calculators::equity_calculator::calculate_equity;
 use crate::poker_core::{card::Card, deck::Deck};
 use crate::preflop_data::helpers::parse_specific_hand;
 use crate::preflop_data::preflop_lookup::PreflopEquity;
@@ -10,6 +12,7 @@ pub fn generate_preflop_scenario(
     preflop_data: &[PreflopEquity],
     deck: &mut Deck,
     rng: &mut impl Rng,
+    seven_card_tables: &Arc<TableSeven>,
 ) -> (Vec<Card>, Vec<Card>, Vec<Card>, f32) {
     let matchup = preflop_data.choose(rng).expect("Preflop equity data is empty");
     info!("Selected matchup: {} vs {}, equity: {}", matchup.hand1, matchup.hand2, matchup.equity);
@@ -55,7 +58,7 @@ pub fn generate_preflop_scenario(
         let opponent_h = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
 
         let equity_result =
-            equity_calculator::calculate_equity(&player_h, &opponent_h, &[], 25_000);
+            calculate_equity(&player_h, &opponent_h, &[], 25_000, seven_card_tables);
         (player_h, opponent_h, equity_result.equity())
     };
 

@@ -3,6 +3,7 @@ use tower_http::cors::{Any, CorsLayer};
 use std::{collections::HashMap, net::SocketAddr, sync::{Arc, Mutex}};
 use std::fs::read_to_string;
 use tracing::info;
+use poker_eval::eval::seven as seven_eval;
 
 
 use crate::preflop_data::preflop_lookup::PreflopEquity;
@@ -17,6 +18,10 @@ pub async fn run() -> anyhow::Result<()> {
     let preflop_data_string = read_to_string("src/preflop_data/preflop_equity.json")?;
     let preflop_equity_data: Vec<PreflopEquity> = serde_json::from_str(&preflop_data_string)?;
     info!("Loaded {} entries", preflop_equity_data.len());
+
+    println!("Building 7-card lookup tables...");
+    let seven_card_tables = Arc::new(seven_eval::build_tables(false));
+    println!("Tables built successfully.");
 
 
     // Shared application state for the Axum server.
@@ -34,6 +39,7 @@ pub async fn run() -> anyhow::Result<()> {
         pure_equity_cache: Arc::new(Mutex::new(HashMap::new())),
         pure_pot_odds_cache: Arc::new(Mutex::new(HashMap::new())),
         preflop_equity_data: Arc::new(preflop_equity_data),
+        seven_card_tables: Arc::clone(&seven_card_tables),
     };
 
     // Configure CORS (allow all origins, methods, and headers)

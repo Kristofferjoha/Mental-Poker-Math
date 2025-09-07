@@ -1,10 +1,12 @@
 use rand::{rng};
 use rand::prelude::IndexedRandom;
+use poker_eval::eval::seven::TableSeven;
+use std::sync::Arc;
 
 use crate::poker_core::{card::Card, deck::Deck};
-use crate::calculators::equity_calculator;
 use crate::preflop_data::preflop_lookup::PreflopEquity;
 use crate::calculators::preflop_scenarios::generate_preflop_scenario;
+use crate::calculators::equity_calculator;
 
 #[derive(Clone, Debug)]
 pub struct PureEqEquityProblem {
@@ -42,6 +44,7 @@ pub fn generate(
     preflop_data: &[PreflopEquity],
     tolerance: f32,
     directional_hints_active: bool,
+    seven_card_tables: &Arc<TableSeven>,
 ) -> PureEqEquityProblem {
     let mut rng = rng();
     let mut deck = Deck::new();
@@ -61,7 +64,7 @@ pub fn generate(
 
     let (player_hand, opponent_hand, board, player_equity) = if *chosen_street == Street::PreFlop {
         //preflop
-        generate_preflop_scenario(preflop_data, &mut deck, &mut rng)
+        generate_preflop_scenario(preflop_data, &mut deck, &mut rng, seven_card_tables)
     } else {
         // post-flop logic
         let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
@@ -69,7 +72,7 @@ pub fn generate(
         
         let board = draw_board(&mut deck, chosen_street);
         
-        let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &board, 25_000);
+        let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &board, 25_000, seven_card_tables);
         
         (player_hand, opponent_hand, board, equity_result.equity())
     };

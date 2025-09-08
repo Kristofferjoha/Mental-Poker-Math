@@ -32,7 +32,6 @@
 		return p && p.pot_size !== undefined;
 	}
 	
-	$: potAfterCall = problem && isPotEquityProblem(problem) ? problem.pot_size + problem.bet_to_call : 0;
 </script>
 
 <div class="poker-table-wrapper">
@@ -64,7 +63,7 @@
 					{#if isPotEquityProblem(problem)}
 						<div class="pot-info">
 							<div class="pot-chip">
-								<span class="pot-amount">{potAfterCall}</span>
+								<span class="pot-amount">{problem.pot_size}</span>
 								<span class="pot-label">Pre All-In Pot</span>
 							</div>
 						</div>

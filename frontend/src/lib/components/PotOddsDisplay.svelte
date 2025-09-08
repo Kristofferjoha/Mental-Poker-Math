@@ -13,7 +13,7 @@
 <div class="display-container">
 	<div class="info-grid">
 		<div class="info-box">
-			<div class="label">Pot Size</div>
+			<div class="label">Pot (after bet) </div>
 			<div class="value pot">{potSize}</div>
 		</div>
 

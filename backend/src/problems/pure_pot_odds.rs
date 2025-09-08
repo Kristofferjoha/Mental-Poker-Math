@@ -1,9 +1,18 @@
 use rand::Rng;
+use tracing::info;
+use rand::prelude::IndexedRandom;
 
 /// Represents a pure pot odds problem where you have to decide whether to call a bet based on pot odds and equity.
 /// Struct Given pot size, bet to call, and equity percentage to user. 
 /// Struct also has pot odds and correct decision calculated.
 /// Must calculate pot odds and decide if calling is correct.
+
+#[derive(Debug, Copy, Clone)] 
+pub enum Difficulty {
+    Easy,
+    Medium,
+    Hard,
+}
 
 
 #[derive(Debug, Clone)]
@@ -16,45 +25,67 @@ pub struct PurePotOddsProblem {
 }
 
 pub fn generate(allow_overbets: bool) -> PurePotOddsProblem {
+
     let mut rng = rand::rng();
 
-    // Pot size rounded to nearest 1000
-    let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;
+    const DIFFICULTIES: [Difficulty; 3] = [
+        Difficulty::Easy,
+        Difficulty::Medium,
+        Difficulty::Hard,
+    ];
 
-    // Bet to call between 1/4 pot and 2x pot (if allow_overbets), else between 1/4 pot and 9/10 pot
-    let min_bet = pot_size / 4;
+    let difficulty = *DIFFICULTIES.choose(&mut rng).unwrap();
+    // Pot size rounded to nearest 1000. 
+    let initial_pot = (rng.random_range(10_000..100_000) / 1000) * 1000;
+
+    // Bet to call between 1/4 pot and 2x pot (if allow_overbets)
+    let min_bet = initial_pot / 4;
     let max_bet = if allow_overbets {
-        pot_size * 2
+        initial_pot * 2
     } else {
-        pot_size * 9 / 10
+        initial_pot * 9 / 10
     };
 
-    // Ensure minimum bet is at least 5000 to avoid trivial decisions
-    let effective_min_bet = if min_bet < 5000 { 5000 } else { min_bet };
+    let effective_min_bet = min_bet.max(5000);
+    let call_amount = (rng.random_range(effective_min_bet..=max_bet) / 1000) * 1000;
 
-    // Bet to call rounded to nearest 1000
-    let bet_to_call = (rng.random_range(effective_min_bet..=max_bet) / 1000) * 1000;
+    // Final pot = (pot before bet) + (opponent's bet) + (our call)
+    let final_pot = initial_pot + call_amount+ call_amount;
+    let required_equity_raw = call_amount as f64 / final_pot as f64;
+    let required_equity = (required_equity_raw * 10000.0).round() / 100.0;
 
-    // Equity as a percentage between 10% and 90%, rounded to 2 decimals
-    let raw_equity: f64 = rng.random_range(10.0..90.0);
-    let equity_percentage = (raw_equity * 100.0).round() / 100.0; // e.g. 42.37 (%)
+    let is_correct_to_call = rng.random_bool(0.5);
 
-    // Current pot (after enemy bet) + our call
-    let final_pot = pot_size + bet_to_call;
+    let (min_margin, max_margin) = match difficulty {
+        Difficulty::Easy => (15.0, 30.0),
+        Difficulty::Medium => (5.0, 15.0),
+        Difficulty::Hard => (0.5, 5.0),
+    };
+    let margin = rng.random_range(min_margin..max_margin);
 
-    // Required equity as a fraction (0.0–1.0)
-    let required_equity = bet_to_call as f64 / final_pot as f64;
+    // Calculate player equity based on the correct decision and the margin.
+    let player_equity_raw = if is_correct_to_call {
+        required_equity + margin
+    } else {
+        required_equity - margin
+    };
 
-    // Pot odds in percent
-    let pot_odds_percentage = required_equity * 100.0; // e.g. 25.0 (%)
+    let player_equity = player_equity_raw.clamp(5.0, 95.0).round();
 
-    let correct_decision = equity_percentage > pot_odds_percentage;
+    let correct_decision = player_equity > required_equity;
+
+    info!(
+        "Generated Problem (Difficulty::{:?}): initial_pot={}, call_amount={}, required_equity={:.2}%, player_equity={:.2}% -> {}",
+        difficulty, initial_pot, call_amount, required_equity, player_equity, if correct_decision {"CALL"} else {"FOLD"}
+    );
+    // Displayed pot includes the enemy bet to call
+    let displyed_pot = initial_pot + call_amount;
 
     PurePotOddsProblem {
-        pot_size,
-        bet_to_call,
-        pot_odds: pot_odds_percentage,
-        equity: equity_percentage,
+        pot_size: displyed_pot,
+        bet_to_call: call_amount,
+        pot_odds: required_equity,
+        equity: player_equity,
         correct_decision,
     }
 }

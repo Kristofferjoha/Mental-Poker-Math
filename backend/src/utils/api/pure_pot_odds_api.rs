@@ -2,6 +2,7 @@ use axum::{extract::{Query,State}, Json,};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use std::collections::HashMap;
+use tracing::info;
 
 use crate::problems::pure_pot_odds::generate;
 use crate::utils::app_state::AppState;
@@ -44,10 +45,11 @@ pub async fn generate_pure_pot_odds_problem(
 ) -> Json<PurePotOddsProblemResponse> {
     let allow_overbets = params.get("allowOverbets").map(|v| v == "true").unwrap_or(false);
 
+
     let problem = generate(allow_overbets);
     let problem_id = Uuid::new_v4();
 
-    tracing::debug!("Generated problem ID: {}, correct decision: {}", problem_id, problem.correct_decision);
+    info!("problem ID: {}", problem_id);
 
     app_state
         .pure_pot_odds_cache

@@ -1,8 +1,8 @@
-use crate::poker_core::card::{Card, Rank, Suit};
-
 use rand::seq::SliceRandom;
 use rand::Rng;
 use strum::IntoEnumIterator;
+
+use crate::poker_core::card::{Card, Rank, Suit};
 
 #[derive(Debug, Clone)]
 pub struct Deck {
@@ -20,6 +20,7 @@ impl Deck {
         Deck { cards }
     }
 
+    // shuffle the deck using rng
     pub fn shuffle<R: Rng + ?Sized>(&mut self, rng: &mut R) {
         self.cards.shuffle(rng);
     }

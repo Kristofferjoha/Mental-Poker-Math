@@ -19,9 +19,9 @@ pub async fn run() -> anyhow::Result<()> {
     let preflop_equity_data: Vec<PreflopEquity> = serde_json::from_str(&preflop_data_string)?;
     info!("Loaded {} entries", preflop_equity_data.len());
 
-    println!("Building 7-card lookup tables...");
+    info!("Building 7-card lookup tables...");
     let seven_card_tables = Arc::new(seven_eval::build_tables(false));
-    println!("Tables built successfully.");
+    info!("Tables built successfully.");
 
 
     // Shared application state for the Axum server.
@@ -34,6 +34,8 @@ pub async fn run() -> anyhow::Result<()> {
     // `preflop_equity_data`: the preloaded JSON data containing equity values for all possible
     //  preflop hand matchups. Wrapped in `Arc` because it is read-only and can be shared
     //  across threads without locking.
+
+    // `seven_card_tables`: precomputed lookup tables for evaluating 7-card poker hands.
     let app_state = AppState {
         pot_equity_cache: Arc::new(Mutex::new(HashMap::new())),
         pure_equity_cache: Arc::new(Mutex::new(HashMap::new())),
@@ -42,10 +44,10 @@ pub async fn run() -> anyhow::Result<()> {
         seven_card_tables: Arc::clone(&seven_card_tables),
     };
 
-    // Configure CORS (allow all origins, methods, and headers)
+    // Configure CORS (allows all origins, methods, and headers)
     let cors = CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any);
 
-    // Build Axum router with API routes
+    // Axum router with API routes
     let app = Router::new()
         .route("/api/pot-equity-get-problem", get(api::generate_pot_equity_problem)) // Corrected
         .route("/api/pot-equity-check-answer", post(api::check_pot_equity_answer)) // Corrected

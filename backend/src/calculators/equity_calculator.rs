@@ -1,41 +1,12 @@
-use crate::poker_core::{
-    card::{Card, Rank, Suit},
-    deck::Deck,
-};
 use poker_eval::eval::seven as seven_eval;
 use poker_eval::eval::seven::TableSeven;
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
 use std::sync::Arc;
 
-pub struct Equity {
-    pub wins: u32,
-    pub ties: u32,
-    pub total_sims: u32,
-}
+use crate::poker_core::{card::{Card}, deck::Deck,};
+use crate::calculators::calculator_helpers::{Equity, card_to_poker_eval_id};
 
-impl Equity {
-    pub fn equity(&self) -> f32 {
-        if self.total_sims == 0 {
-            0.0
-        } else {
-            (self.wins as f32 + self.ties as f32 * 0.5) / self.total_sims as f32
-        }
-    }
-}
-
-fn card_to_poker_eval_id(card: &Card) -> usize {
-    let rank_index = match card.rank {
-        Rank::Two => 0, Rank::Three => 1, Rank::Four => 2, Rank::Five => 3,
-        Rank::Six => 4, Rank::Seven => 5, Rank::Eight => 6, Rank::Nine => 7,
-        Rank::Ten => 8, Rank::Jack => 9, Rank::Queen => 10, Rank::King => 11,
-        Rank::Ace => 12,
-    };
-    let suit_index = match card.suit {
-        Suit::Clubs => 0, Suit::Diamonds => 1, Suit::Hearts => 2, Suit::Spades => 3,
-    };
-    rank_index * 4 + suit_index
-}
 
 pub fn calculate_equity(
     player_hand: &[Card],

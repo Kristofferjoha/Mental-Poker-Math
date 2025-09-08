@@ -147,6 +147,12 @@
 							{ label: 'Turn', value: 'turn' },
 							{ label: 'River', value: 'river' }
 						]
+					},
+					{
+						id: 'allowOverbets',
+						label: 'Allow Overbets',
+						type: 'checkbox',
+						defaultValue: true
 					}
 				]
 			}

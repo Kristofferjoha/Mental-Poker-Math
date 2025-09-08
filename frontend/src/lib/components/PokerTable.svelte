@@ -64,7 +64,7 @@
 						<div class="pot-info">
 							<div class="pot-chip">
 								<span class="pot-amount">{problem.pot_size}</span>
-								<span class="pot-label">Pre All-In Pot</span>
+								<span class="pot-label">Pre Opponent Bet Pot</span>
 							</div>
 						</div>
 					{/if}
@@ -125,7 +125,7 @@
 	}
 	.table-surface {
 		background: linear-gradient(135deg, #1a5f3f 0%, #0d4d32 100%);
-		border-radius: 60px;
+		border-radius: 70px;
 		width: 100%;
 		min-height: 400px;
 		border: 3px solid #2d4a3e;
@@ -134,7 +134,6 @@
 		flex-direction: column;
 		justify-content: space-around;
 		align-items: center;
-		padding: 1rem 1.5rem;
 		position: relative;
 	}
 	.community-area {
@@ -155,17 +154,19 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		padding-bottom: 0.2rem;
 		gap: 0.5rem;
 	}
 	.player-name {
 		font-size: 0.9rem;
 		font-weight: 600;
+		padding-top: 0.4rem;
 		color: var(--text-secondary);
 		text-transform: uppercase;
 	}
 	.hand-container {
 		display: flex;
-		gap: 0.5rem;
+		gap: 0.51rem;
 		min-height: 80px;
 		align-items: center;
 	}
@@ -193,7 +194,9 @@
 		font-size: 0.8rem;
 		font-weight: 500;
 	}
-	.info-chip.green { color: var(--green); }
+	.info-chip.green { 
+		color: var(--green);
+	 }
 	.info-chip.blue { color: var(--blue); }
 
 	.pot-info {

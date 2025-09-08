@@ -2,11 +2,13 @@ use rand::{rng};
 use rand::prelude::IndexedRandom;
 use poker_eval::eval::seven::TableSeven;
 use std::sync::Arc;
+use tracing::info;
 
 use crate::poker_core::{card::Card, deck::Deck};
 use crate::preflop_data::preflop_lookup::PreflopEquity;
 use crate::calculators::preflop_scenarios::generate_preflop_scenario;
 use crate::calculators::equity_calculator;
+use crate::problems::problem_helpers::{draw_board, Street};
 
 #[derive(Clone, Debug)]
 pub struct PureEqEquityProblem {
@@ -19,25 +21,6 @@ pub struct PureEqEquityProblem {
     pub directional_hint_active: bool,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum Street {
-    PreFlop,
-    Flop,
-    Turn,
-    River,
-}
-
-impl Street {
-    fn from_str(s: &str) -> Option<Street> {
-        match s {
-            "pre-flop" => Some(Street::PreFlop),
-            "flop" => Some(Street::Flop),
-            "turn" => Some(Street::Turn),
-            "river" => Some(Street::River),
-            _ => None,
-        }
-    }
-}
 
 pub fn generate(
     allowed_streets_str: Vec<String>,
@@ -50,6 +33,7 @@ pub fn generate(
     let mut deck = Deck::new();
     deck.shuffle(&mut rng);
 
+    // Parse allowed streets from strings, defaulting to all if none valid.
     let mut allowed_streets: Vec<Street> = allowed_streets_str
         .iter()
         .filter_map(|s| Street::from_str(s))
@@ -59,6 +43,7 @@ pub fn generate(
         allowed_streets = vec![Street::PreFlop, Street::Flop, Street::Turn, Street::River];
     }
 
+    // Randomly choose one of the allowed streets.
     let chosen_street = allowed_streets.choose(&mut rng).unwrap();
 
 
@@ -77,28 +62,21 @@ pub fn generate(
         (player_hand, opponent_hand, board, equity_result.equity())
     };
 
+    // Convert equity to percentage and calculate bounds.
+    let player_equity_percentage = player_equity * 100.0;
+    let lower_bound_equity = (player_equity_percentage - tolerance).max(0.0);
+    let upper_bound_equity = (player_equity_percentage + tolerance).min(100.0);
 
-    let player_equity_scaled = player_equity * 100.0;
-    let lower_bound_equity = (player_equity_scaled - tolerance).max(0.0);
-    let upper_bound_equity = (player_equity_scaled + tolerance).min(100.0);
+    info!("Generated Pure Equity Problem: Player Equity: {:.2}%, Bounds: [{:.2}%, {:.2}%], Directional Hints Active: {}", 
+        player_equity_percentage, lower_bound_equity, upper_bound_equity, directional_hints_active);
 
     PureEqEquityProblem {
         player_hand,
         opponent_hand,
         board,
-        player_equity: player_equity_scaled,
+        player_equity: player_equity_percentage,
         lower_bound_equity,
         upper_bound_equity,
         directional_hint_active: directional_hints_active,
     }
-}
-
-fn draw_board(deck: &mut Deck, stage: &Street) -> Vec<Card> {
-    let num_cards = match stage {
-        Street::PreFlop => 0,
-        Street::Flop => 3,
-        Street::Turn => 4,
-        Street::River => 5,
-    };
-    (0..num_cards).map(|_| deck.cards.pop().unwrap()).collect()
 }

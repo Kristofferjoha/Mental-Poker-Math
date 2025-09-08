@@ -1,6 +1,6 @@
 use axum::{extract::{State, Query}, Json};
 use serde::{Deserialize, Serialize};
-use tracing::{info, debug, warn};
+use tracing::{info, warn};
 use uuid::Uuid;
 use std::collections::HashMap;
 
@@ -41,6 +41,7 @@ pub struct PureEquityAnswerResponse {
 /// `streets` (optional): comma-separated list of allowed streets (default: pre-flop, flop, turn, river)
 /// `tolerance` (optional): acceptable error margin for the answer (default: 5.0)
 /// `directionalHints` (optional): enable hints if answer is wrong (default: false)
+/// 
 pub async fn generate_pure_equity_problem(
     State(app_state): State<AppState>,
     Query(params): Query<HashMap<String, String>>,
@@ -74,8 +75,10 @@ pub async fn generate_pure_equity_problem(
     );
 
     let problem_id = Uuid::new_v4();
-    debug!("Generated PURE EQ problem ID: {}, player equity: {}", problem_id, problem.player_equity);
 
+    info!("Generated Pure Equity: problem ID: {}", problem_id);
+
+    // Stores the generated problem in the cache for later answer checking.
     app_state
         .pure_equity_cache
         .lock()
@@ -107,6 +110,7 @@ pub async fn check_pure_equity_answer(
             problem.lower_bound_equity <= payload.guess_value &&
             payload.guess_value <= problem.upper_bound_equity;
 
+        // Provide directional hint if the guess is incorrect and hints are enabled.
         let directional_hint = if !user_guess_is_correct && directional_hint_active {
             if payload.guess_value < player_equity { "Higher" } else { "Lower" }
         } else {

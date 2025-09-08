@@ -49,7 +49,7 @@ pub async fn generate_pure_pot_odds_problem(
     let problem = generate(allow_overbets);
     let problem_id = Uuid::new_v4();
 
-    info!("problem ID: {}", problem_id);
+    info!("Generated Pure Pot Odds: problem ID: {}", problem_id);
 
     app_state
         .pure_pot_odds_cache

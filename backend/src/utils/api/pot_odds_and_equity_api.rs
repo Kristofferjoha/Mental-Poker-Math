@@ -1,6 +1,6 @@
 use axum::{extract::{Query, State}, Json};
 use serde::{Deserialize, Serialize};
-use tracing::{info, debug, warn};
+use tracing::{info, warn};
 use uuid::Uuid;
 use std::collections::HashMap;
 
@@ -71,7 +71,8 @@ pub async fn generate_pot_equity_problem(
     );
 
     let problem_id = Uuid::new_v4();
-    debug!("Generated POT EQ problem ID: {}, correct decision: {}", problem_id, problem.correct_decision);
+
+    info!("Generated Pot Odds Equity: problem ID: {}", problem_id);
 
     app_state
         .pot_equity_cache

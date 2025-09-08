@@ -22,7 +22,6 @@ impl Equity {
     }
 }
 
-
 // Converts a `Card` struct to the corresponding PokerEval ID (0-51).
 pub fn card_to_poker_eval_id(card: &Card) -> usize {
     let rank_index = match card.rank {

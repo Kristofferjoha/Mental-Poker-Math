@@ -626,6 +626,23 @@
 		overflow-y: auto;
 		padding-right: 0.5rem;
 	}
+	.history-scroll-area::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	.history-scroll-area::-webkit-scrollbar-track {
+		background: rgba(0, 0, 0, 0.05);
+		border-radius: 4px;
+	}
+
+	.history-scroll-area::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+	}
+
+	.history-scroll-area::-webkit-scrollbar-thumb:hover {
+		background: rgba(197, 194, 194, 0.4);
+	}
 
 	@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 	@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }

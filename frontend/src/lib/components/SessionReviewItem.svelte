@@ -76,7 +76,7 @@
 
 <style>
 	:global(.history-item .card-image) {
-		height: 60px;
+		height: 80px;
 		width: auto;
 		margin: 0;
 	}
@@ -85,7 +85,7 @@
 		border: 1px solid var(--border-color);
 		border-left-width: 5px;
 		border-radius: var(--border-radius-md);
-		padding: 1rem;
+		padding: 0.5rem;
 		margin-bottom: 1rem;
 	}
 	.history-item.correct { border-left-color: var(--green); }
@@ -96,7 +96,7 @@
 	.decision { font-size: 0.9rem; color: var(--text-secondary); }
 	.correct-decision { margin-left: 0.5rem; font-weight: 600; color: var(--gold); }
 	
-	.cards-layout { display: flex; justify-content: space-around; gap: 1rem; margin-bottom: 1rem; }
+	.cards-layout { display: flex; justify-content: space-around; gap: 0.5rem; margin-bottom: 1rem; }
 	.hand-group, .board { text-align: center; }
 	.label { font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.5rem; }
 	.cards { display: flex; gap: 0.25rem; justify-content: center; }
@@ -106,7 +106,7 @@
 		justify-content: space-between;
 		font-size: 0.9rem;
 		border-top: 1px solid var(--border-color);
-		padding-top: 1rem;
+		padding-top: 0.5rem;
 		margin-top: 1rem;
 	}
 </style>

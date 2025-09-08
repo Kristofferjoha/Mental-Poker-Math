@@ -21,6 +21,12 @@
 			playerHandDisplay = padHand(problem.player_hand, 2);
 			opponentHandDisplay = padHand(problem.opponent_hand, 2);
 			boardDisplay = padHand(problem.board, 5);
+			playerHandDisplay.forEach(card => {
+			if (card) {
+				const img = new Image();
+				img.src = `/cards/${card.rank}_of_${card.suit.toLowerCase()}.svg`;
+			}
+		});
 		} else {
 			playerHandDisplay = padHand([], 2);
 			opponentHandDisplay = padHand([], 2);
@@ -147,7 +153,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 1rem;
+		gap: 0.5rem;
 		width: 100%;
 	}
 	.player-label {

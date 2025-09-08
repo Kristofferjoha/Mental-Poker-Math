@@ -96,7 +96,7 @@
 
 	.menu-box {
 		margin: auto;
-		padding: 2.5rem;
+		padding: 1.rem;
 		background: var(--content-bg);
 		border: 1px solid var(--border-color);
 		border-radius: var(--border-radius-lg);
@@ -106,7 +106,7 @@
 
 	.menu-box p {
 		max-width: 600px;
-		margin: 0 auto 1.5rem auto;
+		margin: 0 auto .5rem auto;
 	}
 
 	.options-area {
@@ -122,14 +122,14 @@
 	}
 
 	.results-area {
-		margin-top: 2.5rem;
+		margin-top: 1.5rem;
 		text-align: left;
 	}
 	.button-group {
 		display: flex;
 		justify-content: center;
 		gap: 1rem;
-		margin-bottom: 2rem;
+		margin-bottom: 1rem;
 	}
 	.button-secondary {
     display: inline-block;

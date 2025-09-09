@@ -20,12 +20,12 @@
 
 <svelte:head>
 	<title>Mental Poker Math</title>
-	<meta name="description" content="A collection of minigames to sharpen your poker math intuition." />
+	<meta name="description" content="A couple of minigames to sharpen poker equity intuition and pot-odds mathematics" />
 </svelte:head>
 
 <main>
 	<h1>Mental Poker Math</h1>
-	<p class="subtitle">Sharpen your poker intuition and numerical precision with these targeted drills.</p>
+	<p class="subtitle">A couple of minigames to sharpen poker equity intuition and pot-odds mathematics.</p>
 
 	<nav class="game-menu">
 		{#each games as game}

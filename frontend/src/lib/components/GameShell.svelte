@@ -39,7 +39,7 @@
 
 <div class="game-shell">
 	{#if gameState === 'ready'}
-		<div class="menu-box">
+		<div class="menu-box-start">
 			<h1>{title}</h1>
 			<p>{description}</p>
 
@@ -59,7 +59,7 @@
 			<slot />
 		</div>
 	{:else if gameState === 'finished'}
-		<div class="menu-box">
+		<div class="menu-box-end">
 			<h2>Final Score:</h2>
 			<p class="final-score">{score}</p>
 			
@@ -94,9 +94,18 @@
 		border: 1px solid var(--border-color);
 	}
 
-	.menu-box {
+	.menu-box-end {
 		margin: auto;
-		padding: 1.rem;
+		padding: .5rem;
+		background: var(--content-bg);
+		border: 1px solid var(--border-color);
+		border-radius: var(--border-radius-lg);
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+		text-align: center;
+	}
+	.menu-box-start {
+		margin: auto;
+		padding: 2.5rem;
 		background: var(--content-bg);
 		border: 1px solid var(--border-color);
 		border-radius: var(--border-radius-lg);
@@ -104,7 +113,12 @@
 		text-align: center;
 	}
 
-	.menu-box p {
+	.menu-box-end p {
+		max-width: 600px;
+		margin: 0 auto .5rem auto;
+	}
+
+	.menu-box-start p {
 		max-width: 600px;
 		margin: 0 auto .5rem auto;
 	}
@@ -122,7 +136,7 @@
 	}
 
 	.results-area {
-		margin-top: 1.5rem;
+		margin-top: 1.0rem;
 		text-align: left;
 	}
 	.button-group {

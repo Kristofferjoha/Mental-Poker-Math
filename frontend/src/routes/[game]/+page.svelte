@@ -35,8 +35,8 @@
 		[
 			'pure-pot-odds',
 			{
-				title: 'Pure Pot Odds Drill',
-				description: 'No cards, just numbers. Quickly decide to call or fold based on pot odds vs. equity.',
+				title: 'Numbers EV Trainer',
+				description: 'No cards, just numbers. Quickly decide whether calling is a positive ev play based on pot odds and equity.',
 				api: {
 					getProblem: '/api/pure-pot-odds-get-problem',
 					checkAnswer: '/api/pure-pot-odds-check-answer'
@@ -65,7 +65,7 @@
 		[
 			'pure-equity',
 			{
-				title: 'Pure Equity Trainer',
+				title: 'Equity Intuition Trainer',
 				description: "See a heads-up all-in scenario and estimate your hand's raw equity.",
 				api: {
 					getProblem: '/api/pure-equity-get-problem',
@@ -78,7 +78,7 @@
 						type: 'select',
 						defaultValue: 60,
 						choices: [
-							{ label: '60 Seconds', value: 60 },
+							{ label: '60 Seconds', value: 10 },
 							{ label: '90 Seconds', value: 90 },
 							{ label: '120 Seconds', value: 120 }
 						]
@@ -118,8 +118,8 @@
 		[
 			'pot-odds-equity',
 			{
-				title: 'Pot Odds + EV Decision',
-				description: 'Cards on the table. Face an all-in and decide if calling is profitable.',
+				title: 'heads-up equity + pot odds',
+				description: 'All-in heads-up situation. Use equity and pot odds to decide if the call is +EV.',
 				api: {
 					getProblem: '/api/pot-equity-get-problem',
 					checkAnswer: '/api/pot-equity-check-answer'
@@ -131,7 +131,7 @@
 						type: 'select',
 						defaultValue: 60,
 						choices: [
-							{ label: '60 Seconds', value: 60 },
+							{ label: '60 Seconds', value: 2 },
 							{ label: '90 Seconds', value: 90 },
 							{ label: '120 Seconds', value: 120 }
 						]
@@ -476,8 +476,8 @@
 				<div class="history-container">
 					<h3>Hand History</h3>
 					<div class="history-scroll-area">
-						{#each sessionHistory as item, index}
-							<SessionReviewItem {item} {index} />
+						{#each sessionHistory as item}
+							<SessionReviewItem {item} />
 						{/each}
 					</div>
 				</div>

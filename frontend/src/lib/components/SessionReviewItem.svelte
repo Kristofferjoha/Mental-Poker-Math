@@ -3,7 +3,6 @@
 	import Card from '$lib/components/deck.svelte';
 
 	export let item: HistoryItem;
-	export let index: number;
 
 	function isPotEquityResponse(response: HistoryItem['response']): response is PotEquityCheckResponse {
 		return 'correctDecision' in response;
@@ -25,12 +24,11 @@
 
 <div class="history-item" class:correct={isCorrect} class:wrong={!isCorrect}>
 	<div class="header">
-		<span class="hand-number">Hand #{index + 1}</span>
 		<div class="decision">
 			{yourDecisionText}
 			{#if !isCorrect && item.game === 'pot-odds-equity' && isPotEquityResponse(item.response)}
 				<span class="correct-decision">(Correct: {item.response.expectedDecision ? 'Call' : 'Fold'})</span>
-			{:else if !isCorrect && item.game === 'pure-equity' && isPureEquityResponse(item.response)}
+			{:else if item.game === 'pure-equity' && isPureEquityResponse(item.response)}
 				<span class="correct-decision">(Actual: {(item.response.playerEquity).toFixed(1)}%)</span>
 			{/if}
 		</div>
@@ -55,21 +53,28 @@
 		</div>
 	</div>
 
-	<div class="board">
-		<div class="label">Board</div>
-		<div class="cards">
-			{#each item.problem.board as card}
-				<Card rank={card.rank} suit={card.suit} />
-			{/each}
+	{#if item.problem.board.length > 0}
+		<div class="board">
+			<div class="label">Board</div>
+			<div class="cards">
+				{#each item.problem.board as card}
+					<Card rank={card.rank} suit={card.suit} />
+				{/each}
+			</div>
 		</div>
-	</div>
+	{:else}
+		<div class="board">
+			<div class="label">Board</div>
+			<div class="no-board">No board</div>
+		</div>
+	{/if}
 
 	<div class="details">
 		{#if item.game === 'pot-odds-equity' && isPotEquityResponse(item.response)}
 			<span>Pot Odds: <strong>{(item.response.potOdds * 100).toFixed(1)}%</strong></span>
 			<span>Your Equity: <strong>{(item.response.playerEquity * 100).toFixed(1)}%</strong></span>
 		{:else if item.game === 'pure-equity' && isPureEquityResponse(item.response)}
-			<span>Your Equity: <strong>{(item.response.playerEquity).toFixed(1)}%</strong></span>
+			&nbsp;
 		{/if}
 	</div>
 </div>
@@ -91,8 +96,7 @@
 	.history-item.correct { border-left-color: var(--green); }
 	.history-item.wrong { border-left-color: var(--red); }
 
-	.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-	.hand-number { font-weight: 600; }
+	.header { display: flex; justify-content: center; align-items: center; margin-bottom: 1rem; }
 	.decision { font-size: 0.9rem; color: var(--text-secondary); }
 	.correct-decision { margin-left: 0.5rem; font-weight: 600; color: var(--gold); }
 	
@@ -108,5 +112,10 @@
 		border-top: 1px solid var(--border-color);
 		padding-top: 0.5rem;
 		margin-top: 1rem;
+	}
+	.no-board {
+		font-size: 0.9rem;
+		color: var(--text-secondary);
+		font-style: italic;
 	}
 </style>

@@ -2,17 +2,16 @@ use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
 use serde::Serialize;
+use rs_poker::core::Hand;
 
 use crate::starting_hands::STARTING_HANDS;
-use crate::tools::equity_calculator::calculate_equity;
+use crate::tools::equity_calculator::{calculate_equity, to_rs_card};
 use crate::utils::parse_specific_hand;
 
-/// Holds the equity result of a preflop hand matchup.
-
 #[derive(Serialize)]
-pub struct PreflopEquity {
-    pub hand1: String,
-    pub hand2: String,
+pub struct PreflopEquity<'a> {
+    pub hand1: &'a str,
+    pub hand2: &'a str,
     pub equity: f32,
 }
 
@@ -34,37 +33,35 @@ pub fn preflop_equity_generation(number_of_simulations: u32) -> std::io::Result<
 }
 
 /// Generate all preflop equities.
-fn generate_equities(num_sims: u32, start_time: &Instant) -> Vec<PreflopEquity> {
-    let mut all_equities = Vec::new();
+fn generate_equities(num_sims: u32, start_time: &Instant) -> Vec<PreflopEquity<'static>> {
+    let mut parsed_hands = Vec::with_capacity(STARTING_HANDS.len());
+    parsed_hands.extend(STARTING_HANDS.iter().map(|s| {
+        let hand_vec = parse_specific_hand(s).expect("Failed to parse hand from const array");
+        let rs_cards: Vec<rs_poker::core::Card> = hand_vec.iter().map(to_rs_card).collect();
+        let rs_hand = Hand::new_with_cards(rs_cards);
+        (*s, hand_vec, rs_hand)
+    }));
+
+    const EXPECTED_MATCHUPS: usize = 812_175;
+    let mut all_equities = Vec::with_capacity(EXPECTED_MATCHUPS);
+    
     let mut processed_valid_matchups = 0;
-    let total_pairs_to_check = (STARTING_HANDS.len() * (STARTING_HANDS.len() - 1)) / 2;
 
-    println!("Total pairs to check for conflicts: {}", total_pairs_to_check);
-
-    for (i, hand1_str_ref) in STARTING_HANDS.iter().enumerate() {
-        // Dereference the reference from the iterator
-        let hand1_str = *hand1_str_ref;
-        let hand1 = parse_specific_hand(hand1_str).expect("Failed to parse hand1 from const array"); 
-
-        // Iterate through all subsequent hands to form pairs
-        for hand2_str_ref in STARTING_HANDS.iter().skip(i + 1) {
-            let hand2_str = *hand2_str_ref;
-            let hand2 = parse_specific_hand(hand2_str).expect("Failed to parse hand2 from const array"); // string into vector of "Card"'s
-
-            // If any card in hand1 is also in hand2, the matchup is invalid.
-            if hand1.iter().any(|c1| hand2.contains(c1)) {
-                continue; // Skip this pair
+    for (i, (hand1_str, hand1_vec, hand1_rs)) in parsed_hands.iter().enumerate() {
+        for (hand2_str, hand2_vec, hand2_rs) in parsed_hands.iter().skip(i + 1) {
+            // Direct comparison for two-card hands
+            if hand1_vec[0] == hand2_vec[0] || hand1_vec[0] == hand2_vec[1] ||
+            hand1_vec[1] == hand2_vec[0] || hand1_vec[1] == hand2_vec[1] {
+                continue;
             }
-
-            let equity_result = calculate_equity(&hand1, &hand2, &[], num_sims);
+            let equity_result = calculate_equity(hand1_rs, hand2_rs, num_sims);
             all_equities.push(PreflopEquity {
-                hand1: hand1_str.to_string(),
-                hand2: hand2_str.to_string(),
+                hand1: hand1_str,
+                hand2: hand2_str,
                 equity: equity_result * 100.0,
             });
-
             processed_valid_matchups += 1;
-            if processed_valid_matchups % 10000 == 0 {
+            if processed_valid_matchups % 1000 == 0 {
                 print_progress(processed_valid_matchups, start_time);
             }
         }

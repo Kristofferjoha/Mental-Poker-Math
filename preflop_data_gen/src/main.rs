@@ -5,12 +5,12 @@ mod utils;
 
 use tools::generator::preflop_equity_generation;
 
-const CHUNK_SIZE: usize = 300;
+const CHUNK_SIZE: usize = 1000;
 
 /// Command line program for calculating preflop equity for starting hands.
 
 fn main() -> std::io::Result<()> {
-    const NUM_OF_SIMULATIONS: u32 = 100000;
+    const NUM_OF_SIMULATIONS: u32 = 1000000;
 
     preflop_equity_generation(NUM_OF_SIMULATIONS)?;
     Ok(())

@@ -2,8 +2,6 @@ use axum::{extract::{Query,State}, Json,};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use std::collections::HashMap;
-use tracing::info;
-
 use crate::problems::pure_pot_odds::generate;
 use crate::utils::app_state::AppState;
 
@@ -49,8 +47,6 @@ pub async fn generate_pure_pot_odds_problem(
     let problem = generate(allow_overbets);
     let problem_id = Uuid::new_v4();
 
-    info!("Generated Pure Pot Odds: problem ID: {}", problem_id);
-
     app_state
         .pure_pot_odds_cache
         .lock()
@@ -75,7 +71,6 @@ pub async fn check_pure_pot_odds_answer(
     State(app_state): State<AppState>,
     Json(payload): Json<PurePotOddsAnswerRequest>,
 ) -> Json<PurePotOddsAnswerResponse> {
-    tracing::info!("Checking POT EQ answer for problem ID: {}", payload.problem_id);
 
     let stored_problem = app_state
         .pure_pot_odds_cache

@@ -2,7 +2,6 @@ use rand::prelude::IndexedRandom;
 use rand::{Rng, rng};
 use poker_eval::eval::seven::TableSeven;
 use std::sync::Arc;
-use tracing::info;
 
 
 use crate::poker_core::{card::Card, deck::Deck};
@@ -70,9 +69,6 @@ pub fn generate(
     let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;
     let bet_to_call = generate_bet_size(pot_size, allow_overbets, &mut rng);
     let pot_odds = bet_to_call as f32 / (pot_size + bet_to_call+bet_to_call) as f32;
-
-    info!("Generated Pot Equity Problem: Pot Size: {}, Bet to Call: {}, Pot Odds: {:.2}%, Player Equity: {:.2}%", 
-        pot_size, bet_to_call, pot_odds * 100.0, player_equity * 100.0);
 
     PotEquityProblem {
         player_hand,

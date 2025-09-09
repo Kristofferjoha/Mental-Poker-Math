@@ -1,6 +1,6 @@
 use axum::{extract::{State, Query}, Json};
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn};
+use tracing::{warn};
 use uuid::Uuid;
 use std::collections::HashMap;
 
@@ -76,8 +76,6 @@ pub async fn generate_pure_equity_problem(
 
     let problem_id = Uuid::new_v4();
 
-    info!("Generated Pure Equity: problem ID: {}", problem_id);
-
     // Stores the generated problem in the cache for later answer checking.
     app_state
         .pure_equity_cache
@@ -98,7 +96,6 @@ pub async fn check_pure_equity_answer(
     State(app_state): State<AppState>,
     Json(payload): Json<PureEquityAnswerRequest>,
 ) -> Json<PureEquityAnswerResponse> {
-    info!("Checking PURE EQ answer for problem ID: {}", payload.problem_id);
 
     let mut cache = app_state.pure_equity_cache.lock().expect("mutex poisoned");
 
@@ -118,7 +115,6 @@ pub async fn check_pure_equity_answer(
         }.to_string();
 
         if user_guess_is_correct {
-            info!("PURE EQ answer is correct. Removing problem ID: {}", payload.problem_id);
             cache.remove(&payload.problem_id);
         }
 

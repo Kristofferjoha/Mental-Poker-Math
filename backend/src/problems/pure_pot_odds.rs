@@ -1,5 +1,4 @@
 use rand::Rng;
-use tracing::info;
 use rand::prelude::IndexedRandom;
 
 /// Represents a pure pot odds problem where you have to decide whether to call a bet based on pot odds and equity.
@@ -74,10 +73,6 @@ pub fn generate(allow_overbets: bool) -> PurePotOddsProblem {
 
     let correct_decision = player_equity > required_equity;
 
-    info!(
-        "Generated Problem (Difficulty::{:?}): initial_pot={}, call_amount={}, required_equity={:.2}%, player_equity={:.2}% -> {}",
-        difficulty, initial_pot, call_amount, required_equity, player_equity, if correct_decision {"CALL"} else {"FOLD"}
-    );
     // Displayed pot includes the enemy bet to call
     let displyed_pot = initial_pot + call_amount;
 

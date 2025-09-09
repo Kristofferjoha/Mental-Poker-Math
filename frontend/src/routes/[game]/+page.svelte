@@ -78,7 +78,7 @@
 						type: 'select',
 						defaultValue: 60,
 						choices: [
-							{ label: '60 Seconds', value: 10 },
+							{ label: '60 Seconds', value: 60 },
 							{ label: '90 Seconds', value: 90 },
 							{ label: '120 Seconds', value: 120 }
 						]
@@ -131,7 +131,7 @@
 						type: 'select',
 						defaultValue: 60,
 						choices: [
-							{ label: '60 Seconds', value: 2 },
+							{ label: '60 Seconds', value: 60 },
 							{ label: '90 Seconds', value: 90 },
 							{ label: '120 Seconds', value: 120 }
 						]
@@ -230,7 +230,6 @@
 			const queryString = params.toString();
 			const url = queryString ? `${config.api.getProblem}?${queryString}` : config.api.getProblem;
 
-			console.log('Fetching from URL:', url); // debugging (husk at fjernennenene)
 
 			const res = await fetch(url);
 
@@ -254,7 +253,6 @@
 	}
 
 	async function checkPotOddsAnswer(decision: boolean) {
-		console.log('User decision (Pot Odds):', decision); // Debugging log
 		if (isCheckingAnswer || !currentProblem || !config || !isPurePotOddsProblem(currentProblem)) return;
 		isCheckingAnswer = true;
 		try {
@@ -267,7 +265,6 @@
 			const data: PurePotOddsCheckResponse = await res.json();
 			if (data.userGuessIsCorrect) score++
 
-			feedbackClass = data.userGuessIsCorrect ? 'correct-flash' : 'incorrect-flash';
 			setTimeout(() => {
 				nextProblem();
 			}, 100);
@@ -306,12 +303,10 @@
 			];
 
 			if (data.userGuessIsCorrect) {
-				console.log('Correct answer!');
 				score++;
 				feedbackClass = 'correct';
-				setTimeout(nextProblem, 400);
+				setTimeout(nextProblem, 100);
 			} else {
-				console.log('Incorrect answer.');
 				feedbackClass = 'incorrect';
 				isCheckingAnswer = false;
 				await tick();
@@ -335,9 +330,7 @@
 			if (!res.ok) throw new Error(`Server error: ${res.status}`);
 			const data: PotEquityCheckResponse = await res.json();
 
-			console.log('Pot Equity Answer Response:', data); // Debugging log
 			if (data.userGuessIsCorrect) {
-				console.log('Correct answer!');
 				score++;
 			}
 
@@ -350,7 +343,7 @@
 					userDecision: decision
 				}
 			];
-			nextProblem();
+			setTimeout(nextProblem, 100);
 		} catch (e: any) {
 			error = e.message;
 		} finally {

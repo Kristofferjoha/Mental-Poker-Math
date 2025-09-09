@@ -2,7 +2,6 @@ use rand::{rng};
 use rand::prelude::IndexedRandom;
 use poker_eval::eval::seven::TableSeven;
 use std::sync::Arc;
-use tracing::info;
 
 use crate::poker_core::{card::Card, deck::Deck};
 use crate::preflop_data::preflop_lookup::PreflopEquity;
@@ -66,9 +65,6 @@ pub fn generate(
     let player_equity_percentage = player_equity * 100.0;
     let lower_bound_equity = (player_equity_percentage - tolerance).max(0.0);
     let upper_bound_equity = (player_equity_percentage + tolerance).min(100.0);
-
-    info!("Generated Pure Equity Problem: Player Equity: {:.2}%, Bounds: [{:.2}%, {:.2}%], Directional Hints Active: {}", 
-        player_equity_percentage, lower_bound_equity, upper_bound_equity, directional_hints_active);
 
     PureEqEquityProblem {
         player_hand,

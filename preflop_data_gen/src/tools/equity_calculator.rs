@@ -51,8 +51,6 @@ pub fn calculate_equity(
     (wins as f32 + ties as f32 / 2.0) / num_simulations as f32
 }
 
-// These implementations and the helper function need to be public (`pub`)
-// so the `preflop_equity_generation` module can access them.
 
 /// Maps the internal `Rank` enum → `rs_poker::core::Value`.
 impl From<Rank> for Value {

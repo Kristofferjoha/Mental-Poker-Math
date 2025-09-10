@@ -57,7 +57,7 @@
 					<div class="hand-container">
 						{#each opponentHandDisplay as card, i (card ? `${card.rank}-${card.suit}` : `opp-ph-${i}`)}
 							{#if card}
-								<Card rank={card.rank} suit={card.suit} />
+								<Card {card} />
 							{:else}
 								<div class="card-placeholder"></div>
 							{/if}
@@ -78,7 +78,7 @@
 					<div class="board-container">
 						{#each boardDisplay as card, i (card ? `${card.rank}-${card.suit}` : `board-ph-${i}`)}
 							{#if card}
-								<Card rank={card.rank} suit={card.suit} />
+								<Card {card} />
 							{:else}
 								<div class="card-placeholder"></div>
 							{/if}
@@ -90,7 +90,7 @@
 					<div class="hand-container">
 						{#each playerHandDisplay as card, i (card ? `${card.rank}-${card.suit}` : `player-ph-${i}`)}
 							{#if card}
-								<Card rank={card.rank} suit={card.suit} />
+								<Card {card} />
 							{:else}
 								<div class="card-placeholder"></div>
 							{/if}

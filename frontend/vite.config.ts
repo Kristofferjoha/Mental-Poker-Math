@@ -6,10 +6,10 @@ export default defineConfig({
     plugins: [sveltekit()],
     server: {
         proxy: {
-            // Forward all requests starting with /api to your live backend
+            // Forward all requests starting with /api to live backend
             '/api': {
                 target: 'http://91.99.122.106:8001',
-                changeOrigin: true, // This is important for properly forwarding the request
+                changeOrigin: true,
             }
         }
     }

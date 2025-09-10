@@ -57,9 +57,13 @@ pub async fn run() -> anyhow::Result<()> {
         seven_card_tables: Arc::clone(&seven_card_tables),
     };
 
-    // This will only allow requests from your specific frontend domain.
+    let origins = [
+    "https://mentalpokermath.com".parse::<HeaderValue>().unwrap(),
+    "https://www.mentalpokermath.com".parse::<HeaderValue>().unwrap(),
+    ];
+
     let cors = CorsLayer::new()
-        .allow_origin("https://mentalpokermath.com".parse::<HeaderValue>().unwrap())
+        .allow_origin(origins)
         .allow_methods([Method::GET, Method::POST])
         .allow_headers([header::CONTENT_TYPE]);
 

@@ -19,6 +19,9 @@
 	import PokerTable from '$lib/components/PokerTable.svelte';
 	import SessionReviewItem from '$lib/components/SessionReviewItem.svelte';
 	import OptionsMenu from '$lib/components/OptionsMenu.svelte';
+	import { PUBLIC_API_URL } from '$env/static/public';
+	import { dev } from '$app/environment';
+	const API_BASE = dev ? '' : PUBLIC_API_URL;
 
 	// Struct for game configurations
 	type GameConfig = {
@@ -231,7 +234,7 @@
 			const url = queryString ? `${config.api.getProblem}?${queryString}` : config.api.getProblem;
 
 
-			const res = await fetch(url);
+			const res = await fetch(`${API_BASE}${url}`);
 
 			if (!res.ok) throw new Error(`Server error: ${res.status}`);
 			currentProblem = await res.json();
@@ -256,7 +259,7 @@
 		if (isCheckingAnswer || !currentProblem || !config || !isPurePotOddsProblem(currentProblem)) return;
 		isCheckingAnswer = true;
 		try {
-			const res = await fetch(config.api.checkAnswer, {
+			const res = await fetch(`${API_BASE}${config.api.checkAnswer}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ problemId: currentProblem.problem_id, user_decision: decision })
@@ -282,7 +285,7 @@
 
 		isCheckingAnswer = true;
 		try {
-			const res = await fetch(config.api.checkAnswer, {
+			const res = await fetch(`${API_BASE}${config.api.checkAnswer}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ problemId: currentProblem.problem_id, guess_value: guessVal })
@@ -322,7 +325,7 @@
 		if (isCheckingAnswer || !currentProblem || !config || !isPotEquityProblem(currentProblem)) return;
 		isCheckingAnswer = true;
 		try {
-			const res = await fetch(config.api.checkAnswer, {
+			const res = await fetch(`${API_BASE}${config.api.checkAnswer}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ problemId: currentProblem.problem_id, decision })

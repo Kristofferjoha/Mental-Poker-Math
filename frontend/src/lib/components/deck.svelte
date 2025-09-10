@@ -15,6 +15,5 @@
 		height: 80px;
 		width: 54px;
 		box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-		border-radius: 6px;
 	}
 </style>

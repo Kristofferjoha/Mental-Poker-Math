@@ -74,8 +74,6 @@ pub async fn generate_pot_equity_problem(
 
     app_state
         .pot_equity_cache
-        .lock()
-        .expect("mutex poisoned")
         .insert(problem_id, problem.clone());
 
     Json(PotEquityProblemResponse {
@@ -95,12 +93,12 @@ pub async fn check_pot_equity_answer(
 ) -> Json<PotEquityAnswerResponse> {
     let stored_problem = app_state
         .pot_equity_cache
-        .lock()
-        .expect("mutex poisoned")
-        .remove(&payload.problem_id);
+        .get(&payload.problem_id);
 
     match stored_problem {
         Some(problem) => {
+            app_state.pot_equity_cache.invalidate(&payload.problem_id);
+
             let user_decision_is_correct = payload.decision == problem.correct_decision;
             Json(PotEquityAnswerResponse {
                 user_decision_is_correct,

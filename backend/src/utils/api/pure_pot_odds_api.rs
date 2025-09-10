@@ -49,8 +49,6 @@ pub async fn generate_pure_pot_odds_problem(
 
     app_state
         .pure_pot_odds_cache
-        .lock()
-        .expect("mutex poisoned")
         .insert(problem_id, problem.clone());
 
     Json(PurePotOddsProblemResponse {
@@ -74,9 +72,7 @@ pub async fn check_pure_pot_odds_answer(
 
     let stored_problem = app_state
         .pure_pot_odds_cache
-        .lock()
-        .expect("mutex poisoned")
-        .remove(&payload.problem_id);
+        .get(&payload.problem_id);
 
     match stored_problem {
         Some(problem) => {

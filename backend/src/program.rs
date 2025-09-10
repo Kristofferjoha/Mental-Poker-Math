@@ -1,9 +1,11 @@
 use axum::{Router, routing::{get, post}};
 use tower_http::cors::{Any, CorsLayer};
-use std::{collections::HashMap, net::SocketAddr, sync::{Arc, Mutex}};
+use std::{net::SocketAddr, sync::{Arc}};
 use std::fs::read_to_string;
 use tracing::info;
 use poker_eval::eval::seven as seven_eval;
+use std::time::Duration;
+use moka::sync::Cache;
 
 
 use crate::preflop_data::preflop_lookup::PreflopEquity;
@@ -25,21 +27,42 @@ pub async fn run() -> anyhow::Result<()> {
 
 
     // Shared application state for the Axum server.
-    // This struct holds all the data that multiple handlers might need to access concurrently.
+    // This struct bundles together all resources that multiple handlers may need to access.
     //
-    // `pot_eq_store`, `pure_eq_store`, `pure_pot_odds_store`: caches for previously computed
-    // results of poker equity and pot odds calculations. These are wrapped in `Arc<Mutex<...>>`
-    // so multiple async handlers can safely share and mutate them across threads.
+    // - `pot_equity_cache`, `pure_equity_cache`, `pure_pot_odds_cache`: 
+    //   in-memory caches (with TTL and capacity limits) for storing results of
+    //   poker equity and pot odds calculations. These caches are thread-safe 
+    //   and can be accessed concurrently without explicit locking.
     //
-    // `preflop_equity_data`: the preloaded JSON data containing equity values for all possible
-    //  preflop hand matchups. Wrapped in `Arc` because it is read-only and can be shared
-    //  across threads without locking.
+    // - `preflop_equity_data`: preloaded JSON data containing equity values for 
+    //   all possible preflop hand matchups. Wrapped in `Arc` since it is read-only 
+    //   and can be shared efficiently across threads.
+    //
+    // - `seven_card_tables`: precomputed lookup tables for evaluating 7-card 
+    //   poker hands. Also shared across threads via `Arc`.
 
-    // `seven_card_tables`: precomputed lookup tables for evaluating 7-card poker hands.
+    const CACHE_TTL: Duration = Duration::from_secs(300); 
+    const CACHE_MAX_CAPACITY: u64 = 10_000;
+
     let app_state = AppState {
-        pot_equity_cache: Arc::new(Mutex::new(HashMap::new())),
-        pure_equity_cache: Arc::new(Mutex::new(HashMap::new())),
-        pure_pot_odds_cache: Arc::new(Mutex::new(HashMap::new())),
+        pot_equity_cache: Arc::new(
+            Cache::builder()
+                .time_to_live(CACHE_TTL)
+                .max_capacity(CACHE_MAX_CAPACITY)
+                .build(),
+        ),
+        pure_equity_cache: Arc::new(
+            Cache::builder()
+                .time_to_live(CACHE_TTL)
+                .max_capacity(CACHE_MAX_CAPACITY)
+                .build(),
+        ),
+        pure_pot_odds_cache: Arc::new(
+            Cache::builder()
+                .time_to_live(CACHE_TTL)
+                .max_capacity(CACHE_MAX_CAPACITY)
+                .build(),
+        ),
         preflop_equity_data: Arc::new(preflop_equity_data),
         seven_card_tables: Arc::clone(&seven_card_tables),
     };

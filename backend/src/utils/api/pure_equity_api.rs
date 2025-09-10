@@ -79,8 +79,6 @@ pub async fn generate_pure_equity_problem(
     // Stores the generated problem in the cache for later answer checking.
     app_state
         .pure_equity_cache
-        .lock()
-        .expect("mutex poisoned")
         .insert(problem_id, problem.clone());
 
     Json(PureEquityProblemResponse {
@@ -97,9 +95,7 @@ pub async fn check_pure_equity_answer(
     Json(payload): Json<PureEquityAnswerRequest>,
 ) -> Json<PureEquityAnswerResponse> {
 
-    let mut cache = app_state.pure_equity_cache.lock().expect("mutex poisoned");
-
-    if let Some(problem) = cache.get(&payload.problem_id) {
+    if let Some(problem) = app_state.pure_equity_cache.get(&payload.problem_id) {
         let player_equity = problem.player_equity;
         let directional_hint_active = problem.directional_hint_active;
 
@@ -115,7 +111,7 @@ pub async fn check_pure_equity_answer(
         }.to_string();
 
         if user_guess_is_correct {
-            cache.remove(&payload.problem_id);
+            app_state.pure_equity_cache.invalidate(&payload.problem_id);
         }
 
         Json(PureEquityAnswerResponse {

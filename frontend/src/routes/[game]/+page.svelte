@@ -271,6 +271,7 @@
 			setTimeout(() => {
 				nextProblem();
 			}, 100);
+
 		} catch (e: any) {
 			error = e.message;
 			isCheckingAnswer = false;
@@ -323,7 +324,9 @@
 
 	async function checkPotEquityAnswer(decision: boolean) {
 		if (isCheckingAnswer || !currentProblem || !config || !isPotEquityProblem(currentProblem)) return;
+
 		isCheckingAnswer = true;
+
 		try {
 			const res = await fetch(`${API_BASE}${config.api.checkAnswer}`, {
 				method: 'POST',
@@ -346,10 +349,13 @@
 					userDecision: decision
 				}
 			];
-			setTimeout(nextProblem, 100);
+
+			setTimeout(() => {
+				nextProblem();
+			}, 100);
+
 		} catch (e: any) {
 			error = e.message;
-		} finally {
 			isCheckingAnswer = false;
 		}
 	}

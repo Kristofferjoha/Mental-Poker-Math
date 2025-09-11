@@ -2,7 +2,6 @@
     import { getCardImageUrl } from '$lib/utils/cardUtils.js';
     import type { Card as CardType } from '$lib/types';
 
-    // We now accept the whole card object as a prop
     export let card: CardType;
 </script>
 

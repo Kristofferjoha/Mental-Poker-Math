@@ -39,7 +39,7 @@
 			<div class="label">You</div>
 			<div class="cards">
 				{#each item.problem.player_hand as card}
-					<Card rank={card.rank} suit={card.suit} />
+					<Card {card} />
 				{/each}
 			</div>
 		</div>
@@ -47,7 +47,7 @@
 			<div class="label">Opponent</div>
 			<div class="cards">
 				{#each item.problem.opponent_hand as card}
-					<Card rank={card.rank} suit={card.suit} />
+					<Card {card} />
 				{/each}
 			</div>
 		</div>
@@ -58,7 +58,7 @@
 			<div class="label">Board</div>
 			<div class="cards">
 				{#each item.problem.board as card}
-					<Card rank={card.rank} suit={card.suit} />
+					<Card {card} />
 				{/each}
 			</div>
 		</div>

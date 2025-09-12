@@ -70,7 +70,7 @@
 						<div class="pot-info">
 							<div class="pot-chip">
 								<span class="pot-amount">{problem.pot_size}</span>
-								<span class="pot-label">Pre Opponent Bet Pot</span>
+								<span class="pot-label">Pre Opponent Bet</span>
 							</div>
 						</div>
 					{/if}

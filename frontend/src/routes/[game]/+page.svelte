@@ -465,11 +465,6 @@
 			{/if}
 		{:else if error}
 			<div class="error-box"><p><strong>Error:</strong> {error}</p></div>
-		{:else}
-			<div class="loading-state">
-				<div class="loading-spinner"></div>
-				<p>Loading problem...</p>
-			</div>
 		{/if}
 
 		<!-- Post-Game Results -->
@@ -553,19 +548,7 @@
 		font-weight: 700;
 		margin-bottom: 0.8rem !important;
 	}
-	.loading-state {
-		padding: 2rem;
-		color: var(--text-secondary);
-	}
-	.loading-spinner {
-		width: 40px;
-		height: 40px;
-		margin: 1rem auto;
-		border: 3px solid rgba(255, 255, 255, 0.2);
-		border-top: 3px solid var(--gold);
-		border-radius: 50%;
-		animation: spin 1s linear infinite;
-	}
+
 	.error-box {
 		margin-top: 2rem;
 		padding: 1rem;

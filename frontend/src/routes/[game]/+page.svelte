@@ -296,20 +296,19 @@
 
 			directionalHint = data.directionalHint;
 
-			sessionHistory = [
-				...sessionHistory,
-				{
-					game: 'pure-equity',
-					problem: currentProblem,
-					response: data,
-					userGuess: guessVal
-				}
-			];
-
 			if (data.userGuessIsCorrect) {
 				score++;
 				feedbackClass = 'correct';
 				setTimeout(nextProblem, 100);
+				sessionHistory = [
+					...sessionHistory,
+					{
+						game: 'pure-equity',
+						problem: currentProblem,
+						response: data,
+						userGuess: guessVal
+					}
+				];
 			} else {
 				feedbackClass = 'incorrect';
 				isCheckingAnswer = false;

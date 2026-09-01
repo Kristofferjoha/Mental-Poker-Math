@@ -4,8 +4,6 @@
 	import type {
 		AnyProblem,
 		AnyFeedback,
-		PurePotOddsProblem,
-		PurePotOddsCheckResponse,
 		PureEquityProblem,
 		PureEquityCheckResponse,
 		PotEquityProblem,
@@ -15,13 +13,20 @@
 	} from '$lib/types';
 
 	import GameShell from '$lib/components/GameShell.svelte';
-	import PotOddsDisplay from '$lib/components/PotOddsDisplay.svelte';
 	import PokerTable from '$lib/components/PokerTable.svelte';
 	import SessionReviewItem from '$lib/components/SessionReviewItem.svelte';
 	import OptionsMenu from '$lib/components/OptionsMenu.svelte';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { dev } from '$app/environment';
 	const API_BASE = dev ? 'http://127.0.0.1:8001' : PUBLIC_API_URL;
+
+
+	function assertOk(res: Response) {
+		if (res.status === 410) {
+			throw new Error('That problem is no longer available. Start a new one to continue.');
+		}
+		if (!res.ok) throw new Error(`Server error: ${res.status}`);
+	}
 
 	// Struct for game configurations
 	type GameConfig = {
@@ -35,36 +40,6 @@
 	const { game } = $page.params;
 
 	const gameConfigs = new Map<string, GameConfig>([
-		[
-			'pure-pot-odds',
-			{
-				title: 'Numbers EV Trainer',
-				description: 'No cards, just numbers. Quickly decide whether calling is a positive ev play based on pot odds and equity.',
-				api: {
-					getProblem: '/api/pure-pot-odds-get-problem',
-					checkAnswer: '/api/pure-pot-odds-check-answer'
-				},
-				options: [
-					{
-						id: 'duration',
-						label: 'Game Duration',
-						type: 'select',
-						defaultValue: 60,
-						choices: [
-							{ label: '60 Seconds', value: 60 },
-							{ label: '90 Seconds', value: 90 },
-							{ label: '120 Seconds', value: 120 }
-						]
-					},
-					{
-						id: 'allowOverbets',
-						label: 'Allow Overbets',
-						type: 'checkbox',
-						defaultValue: true
-					}
-				]
-			}
-		],
 		[
 			'pure-equity',
 			{
@@ -182,17 +157,11 @@
 	let feedbackClass = '';
 	let sessionHistory: HistoryItem[] = [];
 
-	function isPurePotOddsProblem(p: AnyProblem | null): p is PurePotOddsProblem {
-		return !!p && 'equity' in p;
-	}
 	function isPureEquityProblem(p: AnyProblem | null): p is PureEquityProblem {
 		return !!p && 'player_hand' in p && !('pot_size' in p);
 	}
 	function isPotEquityProblem(p: AnyProblem | null): p is PotEquityProblem {
 		return !!p && 'pot_size' in p && 'player_hand' in p;
-	}
-	function isPurePotOddsFeedback(f: AnyFeedback | null): f is PurePotOddsCheckResponse {
-		return !!f && 'potOdds' in f;
 	}
 
 	function handleGameStart() {
@@ -236,7 +205,7 @@
 
 			const res = await fetch(`${API_BASE}${url}`);
 
-			if (!res.ok) throw new Error(`Server error: ${res.status}`);
+			assertOk(res);
 			currentProblem = await res.json();
 
 			if (game === 'pure-equity') {
@@ -255,29 +224,6 @@
 		}
 	}
 
-	async function checkPotOddsAnswer(decision: boolean) {
-		if (isCheckingAnswer || !currentProblem || !config || !isPurePotOddsProblem(currentProblem)) return;
-		isCheckingAnswer = true;
-		try {
-			const res = await fetch(`${API_BASE}${config.api.checkAnswer}`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ problemId: currentProblem.problem_id, user_decision: decision })
-			});
-			if (!res.ok) throw new Error(`Server error: ${res.status}`);
-			const data: PurePotOddsCheckResponse = await res.json();
-			if (data.userGuessIsCorrect) score++
-
-			setTimeout(() => {
-				nextProblem();
-			}, 100);
-
-		} catch (e: any) {
-			error = e.message;
-			isCheckingAnswer = false;
-		}
-	}
-
 	async function checkEquityAnswer() {
 		if (isCheckingAnswer || !currentProblem || !config || !isPureEquityProblem(currentProblem)) return;
 
@@ -291,7 +237,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ problemId: currentProblem.problem_id, guess_value: guessVal })
 			});
-			if (!res.ok) throw new Error(`Server error: ${res.status}`);
+			assertOk(res);
 			const data: PureEquityCheckResponse = await res.json();
 
 			directionalHint = data.directionalHint;
@@ -332,7 +278,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ problemId: currentProblem.problem_id, decision })
 			});
-			if (!res.ok) throw new Error(`Server error: ${res.status}`);
+			assertOk(res);
 			const data: PotEquityCheckResponse = await res.json();
 
 			if (data.userGuessIsCorrect) {
@@ -374,9 +320,7 @@
 
         const decision = key === 'c';
 
-        if (game === 'pure-pot-odds') {
-            checkPotOddsAnswer(decision);
-        } else if (game === 'pot-odds-equity') {
+        if (game === 'pot-odds-equity') {
             checkPotEquityAnswer(decision);
         }
     }
@@ -403,28 +347,8 @@
 
 		<!-- Main Game UI -->
 		{#if currentProblem}
-			<!-- Pure Pot Odds Game -->
-			{#if game === 'pure-pot-odds' && isPurePotOddsProblem(currentProblem)}
-				<PotOddsDisplay currentProblem={currentProblem} />
-				<div class="action-area">
-					{#if feedback && isPurePotOddsFeedback(feedback)}
-						<div class="feedback-box" class:correct={feedback.userGuessIsCorrect} class:wrong={!feedback.userGuessIsCorrect}>
-							<p class="feedback-title">{feedback.userGuessIsCorrect ? 'Correct!' : 'Incorrect!'}</p>
-							<p>
-								Correct decision: <strong>{feedback.expectedDecision ? 'CALL' : 'FOLD'}</strong>.
-							</p>
-							<p>Required equity: <strong>{feedback.potOdds.toFixed(1)}%</strong></p>
-						</div>
-					{:else}
-						<div class="button-group">
-							<button class="call-btn" on:click={() => checkPotOddsAnswer(true)} disabled={isCheckingAnswer}>CALL <kbd>C</kbd></button>
-							<button class="fold-btn" on:click={() => checkPotOddsAnswer(false)} disabled={isCheckingAnswer}>FOLD <kbd>F</kbd></button>
-						</div>
-					{/if}
-				</div>
-
 			<!-- Pure Equity Game -->
-			{:else if game === 'pure-equity' && isPureEquityProblem(currentProblem)}
+			{#if game === 'pure-equity' && isPureEquityProblem(currentProblem)}
 				<PokerTable problem={currentProblem} />
 				<div class="action-area">
 

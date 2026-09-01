@@ -10,12 +10,7 @@
 			title: 'Equity Intuition Training',
 			description: "See a heads-up all-in scenario and estimate your hand's equity."
 		},
-		{
-			slug: 'pure-pot-odds',
-			title: 'Pure Pot Odds Drill',
-			description: 'No cards, just numbers. Quickly decide to call or fold based on pot odds vs. equity.'
-		}
-	];
+		];
 </script>
 
 <svelte:head>

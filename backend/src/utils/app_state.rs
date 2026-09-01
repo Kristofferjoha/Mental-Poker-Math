@@ -5,7 +5,6 @@ use poker_eval::eval::seven::TableSeven;
 
 use crate::problems::pot_equity::PotEquityProblem;
 use crate::problems::pure_equity::PureEqEquityProblem;
-use crate::problems::pure_pot_odds::PurePotOddsProblem;
 
 /// Centralized, thread-safe application state for the Axum HTTP server.
 /// `AppState` consolidates all shared mutable and read-only data required by request handlers.
@@ -17,6 +16,5 @@ use crate::problems::pure_pot_odds::PurePotOddsProblem;
 pub struct AppState {
     pub pot_equity_cache: Arc<Cache<Uuid, PotEquityProblem>>,
     pub pure_equity_cache: Arc<Cache<Uuid, PureEqEquityProblem>>,
-    pub pure_pot_odds_cache: Arc<Cache<Uuid, PurePotOddsProblem>>,
     pub seven_card_tables: Arc<TableSeven>,
 }

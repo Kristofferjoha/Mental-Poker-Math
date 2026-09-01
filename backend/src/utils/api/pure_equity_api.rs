@@ -68,7 +68,6 @@ pub async fn generate_pure_equity_problem(
 
     let problem = generate(
         allowed_streets,
-        &app_state.preflop_equity_data,
         tolerance,
         directional_hints_active,
         &app_state.seven_card_tables,

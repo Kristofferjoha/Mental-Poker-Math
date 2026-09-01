@@ -1,4 +1,3 @@
-
 use poker_eval::eval::seven::TableSeven;
 use rayon::prelude::*;
 

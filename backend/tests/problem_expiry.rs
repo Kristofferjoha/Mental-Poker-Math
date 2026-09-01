@@ -33,7 +33,6 @@ fn test_state() -> AppState {
     AppState {
         pot_equity_cache: cache(),
         pure_equity_cache: cache(),
-        pure_pot_odds_cache: cache(),
         seven_card_tables: build_tables(false),
     }
 }
@@ -87,19 +86,6 @@ async fn unknown_pot_equity_problem_does_not_invent_a_fold() {
     // `expected_decision: false` used to read as a real answer -- "you should have folded"
     assert!(body.get("expected_decision").is_none());
     assert!(body.get("player_equity").is_none());
-}
-
-#[tokio::test]
-async fn unknown_pure_pot_odds_problem_is_gone_not_graded() {
-    let id = Uuid::new_v4();
-    let (status, body) = post(
-        "/api/pure-pot-odds-check-answer",
-        serde_json::json!({ "problemId": id, "user_decision": true }),
-    )
-    .await;
-
-    assert_eq!(status, StatusCode::GONE);
-    assert_eq!(body["error"], "problem_gone");
 }
 
 /// The happy path still works: generate a real problem, then answer it.

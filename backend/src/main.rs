@@ -1,16 +1,10 @@
 // $env:RUST_LOG = "info"
-use tracing;
 
-mod poker_core;
-mod utils;
-mod program;
-mod problems;
-mod calculators;
-mod preflop_data;
+use backend::program;
 
 #[tokio::main]
 async fn main() {
-     // Initializing logging/tracing 
+    // Initializing logging/tracing
     tracing_subscriber::fmt::init();
 
     if let Err(e) = program::run().await {

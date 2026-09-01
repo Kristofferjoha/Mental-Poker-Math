@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use std::collections::HashMap;
 use crate::problems::pure_pot_odds::generate;
+use crate::utils::api::ApiError;
 use crate::utils::app_state::AppState;
 
 /// Response returned when a new Pure Pot Odds problem is generated.
@@ -68,28 +69,16 @@ pub async fn generate_pure_pot_odds_problem(
 pub async fn check_pure_pot_odds_answer(
     State(app_state): State<AppState>,
     Json(payload): Json<PurePotOddsAnswerRequest>,
-) -> Json<PurePotOddsAnswerResponse> {
-
-    let stored_problem = app_state
+) -> Result<Json<PurePotOddsAnswerResponse>, ApiError> {
+    let problem = app_state
         .pure_pot_odds_cache
-        .get(&payload.problem_id);
+        .get(&payload.problem_id)
+        .ok_or(ApiError::ProblemGone(payload.problem_id))?;
 
-    match stored_problem {
-        Some(problem) => {
-            let user_decision_is_correct = payload.user_decision == problem.correct_decision;
-            Json(PurePotOddsAnswerResponse {
-                user_decision_is_correct,
-                expected_decision: problem.correct_decision,
-                pot_odds: problem.pot_odds,
-            })
-        }
-        None => {
-            tracing::warn!("POT EQ Problem ID not found or expired: {}", payload.problem_id);
-            Json(PurePotOddsAnswerResponse {
-                user_decision_is_correct: false,
-                expected_decision: false,
-                pot_odds: 0.0,
-            })
-        }
-    }
+    let user_decision_is_correct = payload.user_decision == problem.correct_decision;
+    Ok(Json(PurePotOddsAnswerResponse {
+        user_decision_is_correct,
+        expected_decision: problem.correct_decision,
+        pot_odds: problem.pot_odds,
+    }))
 }

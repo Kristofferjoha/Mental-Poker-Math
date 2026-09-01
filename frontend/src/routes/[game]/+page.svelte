@@ -21,7 +21,21 @@
 	import OptionsMenu from '$lib/components/OptionsMenu.svelte';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { dev } from '$app/environment';
-	const API_BASE = dev ? '' : PUBLIC_API_URL;
+	// In dev the browser calls the local backend directly (cross-origin), so the
+	// CORS path is exercised exactly as it is in production rather than being
+	// hidden behind a same-origin dev proxy.
+	const API_BASE = dev ? 'http://127.0.0.1:8001' : PUBLIC_API_URL;
+
+	// A 410 means the server no longer holds this problem: it expired, was already
+	// answered, or was lost to a restart. The server used to answer these with a
+	// graded result built from zeroes, which told the player they were wrong and
+	// that the true equity was 0%. It now says so plainly, and so do we.
+	function assertOk(res: Response) {
+		if (res.status === 410) {
+			throw new Error('That problem is no longer available. Start a new one to continue.');
+		}
+		if (!res.ok) throw new Error(`Server error: ${res.status}`);
+	}
 
 	// Struct for game configurations
 	type GameConfig = {
@@ -236,7 +250,7 @@
 
 			const res = await fetch(`${API_BASE}${url}`);
 
-			if (!res.ok) throw new Error(`Server error: ${res.status}`);
+			assertOk(res);
 			currentProblem = await res.json();
 
 			if (game === 'pure-equity') {
@@ -264,7 +278,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ problemId: currentProblem.problem_id, user_decision: decision })
 			});
-			if (!res.ok) throw new Error(`Server error: ${res.status}`);
+			assertOk(res);
 			const data: PurePotOddsCheckResponse = await res.json();
 			if (data.userGuessIsCorrect) score++
 
@@ -291,7 +305,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ problemId: currentProblem.problem_id, guess_value: guessVal })
 			});
-			if (!res.ok) throw new Error(`Server error: ${res.status}`);
+			assertOk(res);
 			const data: PureEquityCheckResponse = await res.json();
 
 			directionalHint = data.directionalHint;
@@ -332,7 +346,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ problemId: currentProblem.problem_id, decision })
 			});
-			if (!res.ok) throw new Error(`Server error: ${res.status}`);
+			assertOk(res);
 			const data: PotEquityCheckResponse = await res.json();
 
 			if (data.userGuessIsCorrect) {

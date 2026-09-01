@@ -1,11 +1,11 @@
 use axum::{extract::{State, Query}, Json};
 use serde::{Deserialize, Serialize};
-use tracing::{warn};
 use uuid::Uuid;
 use std::collections::HashMap;
 
 use crate::poker_core::card::Card;
 use crate::problems::pure_equity::generate;
+use crate::utils::api::ApiError;
 use crate::utils::app_state::AppState;
 
 /// Response returned when a new Pure Equity problem is generated.
@@ -90,41 +90,42 @@ pub async fn generate_pure_equity_problem(
 }
 
 /// Checks a submitted Pure Equity answer.
+///
+/// Returns `410 Gone` when the problem id is unknown -- never a graded answer.
 pub async fn check_pure_equity_answer(
     State(app_state): State<AppState>,
     Json(payload): Json<PureEquityAnswerRequest>,
-) -> Json<PureEquityAnswerResponse> {
+) -> Result<Json<PureEquityAnswerResponse>, ApiError> {
+    let problem = app_state
+        .pure_equity_cache
+        .get(&payload.problem_id)
+        .ok_or(ApiError::ProblemGone(payload.problem_id))?;
 
-    if let Some(problem) = app_state.pure_equity_cache.get(&payload.problem_id) {
-        let player_equity = problem.player_equity;
-        let directional_hint_active = problem.directional_hint_active;
+    let player_equity = problem.player_equity;
+    let directional_hint_active = problem.directional_hint_active;
 
-        let user_guess_is_correct =
-            problem.lower_bound_equity <= payload.guess_value &&
-            payload.guess_value <= problem.upper_bound_equity;
+    let user_guess_is_correct = problem.lower_bound_equity <= payload.guess_value
+        && payload.guess_value <= problem.upper_bound_equity;
 
-        // Provide directional hint if the guess is incorrect and hints are enabled.
-        let directional_hint = if !user_guess_is_correct && directional_hint_active {
-            if payload.guess_value < player_equity { "Higher" } else { "Lower" }
+    // Provide directional hint if the guess is incorrect and hints are enabled.
+    let directional_hint = if !user_guess_is_correct && directional_hint_active {
+        if payload.guess_value < player_equity {
+            "Higher"
         } else {
-            "Not-Active"
-        }.to_string();
-
-        if user_guess_is_correct {
-            app_state.pure_equity_cache.invalidate(&payload.problem_id);
+            "Lower"
         }
-
-        Json(PureEquityAnswerResponse {
-            user_guess_is_correct,
-            player_equity,
-            directional_hint,
-        })
     } else {
-        warn!("PURE EQ Problem ID not found or expired: {}", payload.problem_id);
-        Json(PureEquityAnswerResponse {
-            user_guess_is_correct: false,
-            player_equity: 0.0,
-            directional_hint: "Not-Active".to_string(),
-        })
+        "Not-Active"
     }
+    .to_string();
+
+    if user_guess_is_correct {
+        app_state.pure_equity_cache.invalidate(&payload.problem_id);
+    }
+
+    Ok(Json(PureEquityAnswerResponse {
+        user_guess_is_correct,
+        player_equity,
+        directional_hint,
+    }))
 }

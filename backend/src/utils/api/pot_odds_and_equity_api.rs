@@ -1,11 +1,11 @@
 use axum::{extract::{Query, State}, Json};
 use serde::{Deserialize, Serialize};
-use tracing::{warn};
 use uuid::Uuid;
 use std::collections::HashMap;
 
 use crate::poker_core::card::Card;
 use crate::problems::pot_equity::generate;
+use crate::utils::api::ApiError;
 use crate::utils::app_state::AppState;
 
 /// Response returned when a new Pot Equity problem is generated.
@@ -90,31 +90,19 @@ pub async fn generate_pot_equity_problem(
 pub async fn check_pot_equity_answer(
     State(app_state): State<AppState>,
     Json(payload): Json<PotEquityAnswerRequest>,
-) -> Json<PotEquityAnswerResponse> {
-    let stored_problem = app_state
+) -> Result<Json<PotEquityAnswerResponse>, ApiError> {
+    let problem = app_state
         .pot_equity_cache
-        .get(&payload.problem_id);
+        .get(&payload.problem_id)
+        .ok_or(ApiError::ProblemGone(payload.problem_id))?;
 
-    match stored_problem {
-        Some(problem) => {
-            app_state.pot_equity_cache.invalidate(&payload.problem_id);
+    app_state.pot_equity_cache.invalidate(&payload.problem_id);
 
-            let user_decision_is_correct = payload.decision == problem.correct_decision;
-            Json(PotEquityAnswerResponse {
-                user_decision_is_correct,
-                expected_decision: problem.correct_decision,
-                player_equity: problem.player_equity,
-                pot_odds: problem.pot_odds,
-            })
-        }
-        None => {
-            warn!("POT EQ Problem ID not found or expired: {}", payload.problem_id);
-            Json(PotEquityAnswerResponse {
-                user_decision_is_correct: false,
-                expected_decision: false,
-                player_equity: 0.0,
-                pot_odds: 0.0,
-            })
-        }
-    }
+    let user_decision_is_correct = payload.decision == problem.correct_decision;
+    Ok(Json(PotEquityAnswerResponse {
+        user_decision_is_correct,
+        expected_decision: problem.correct_decision,
+        player_equity: problem.player_equity,
+        pot_odds: problem.pot_odds,
+    }))
 }

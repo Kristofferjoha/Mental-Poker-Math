@@ -4,8 +4,6 @@ use poker_eval::eval::seven::TableSeven;
 use std::sync::Arc;
 
 use crate::poker_core::{card::Card, deck::Deck};
-use crate::preflop_data::preflop_lookup::PreflopEquity;
-use crate::calculators::preflop_scenarios::generate_preflop_scenario;
 use crate::calculators::equity_calculator;
 use crate::problems::problem_helpers::{draw_board, Street};
 
@@ -23,7 +21,6 @@ pub struct PureEqEquityProblem {
 
 pub fn generate(
     allowed_streets_str: Vec<String>,
-    preflop_data: &[PreflopEquity],
     tolerance: f32,
     directional_hints_active: bool,
     seven_card_tables: &Arc<TableSeven>,
@@ -46,20 +43,16 @@ pub fn generate(
     let chosen_street = allowed_streets.choose(&mut rng).unwrap();
 
 
-    let (player_hand, opponent_hand, board, player_equity) = if *chosen_street == Street::PreFlop {
-        //preflop
-        generate_preflop_scenario(preflop_data, &mut deck, &mut rng, seven_card_tables)
-    } else {
-        // post-flop logic
-        let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
-        let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
-        
-        let board = draw_board(&mut deck, chosen_street);
-        
-        let equity_result = equity_calculator::calculate_equity(&player_hand, &opponent_hand, &board, 25_000, seven_card_tables);
-        
-        (player_hand, opponent_hand, board, equity_result.equity())
-    };
+    let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
+    let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
+    let board = draw_board(&mut deck, chosen_street);
+
+    let player_equity = equity_calculator::calculate_equity(
+        &[&player_hand, &opponent_hand],
+        &board,
+        seven_card_tables,
+    )
+    .hero() as f32;
 
     // Convert equity to percentage and calculate bounds.
     let player_equity_percentage = player_equity * 100.0;

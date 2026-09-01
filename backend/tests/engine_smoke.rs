@@ -59,12 +59,9 @@ fn complete_board_identical_hands_tie() {
     assert_eq!(equity.equity(), 0.5);
 }
 
-/// The CORS allow-list is the one piece of config that fails silently in the
-/// browser when it is wrong, so the parser gets direct tests.
 mod cors_allow_list {
     use backend::program::allowed_origins;
 
-    /// Serialised because these mutate process-wide environment state.
     fn with_env(value: Option<&str>, f: impl FnOnce()) {
         static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
         let _guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
@@ -83,7 +80,6 @@ mod cors_allow_list {
             let as_str: Vec<&str> = origins.iter().filter_map(|o| o.to_str().ok()).collect();
             assert!(as_str.contains(&"https://mentalpokermath.com"));
             assert!(as_str.contains(&"http://localhost:5173"));
-            // localhost and 127.0.0.1 are different origins to a browser
             assert!(as_str.contains(&"http://127.0.0.1:5173"));
         });
     }
@@ -98,7 +94,6 @@ mod cors_allow_list {
 
     #[test]
     fn typos_are_dropped_not_silently_accepted() {
-        // a bad scheme, a trailing slash, and a bare host: all unmatched forever
         with_env(Some("htp://localhost:5173,https://good.example/,localhost:5173,https://ok.example"), || {
             let origins = allowed_origins().expect("one good entry remains");
             let as_str: Vec<&str> = origins.iter().filter_map(|o| o.to_str().ok()).collect();

@@ -91,7 +91,7 @@ pub async fn generate_pure_equity_problem(
 
 /// Checks a submitted Pure Equity answer.
 ///
-/// Returns `410 Gone` when the problem id is unknown -- never a graded answer.
+/// Returns `410 Gone` when the problem id is unknown, never a graded answer.
 pub async fn check_pure_equity_answer(
     State(app_state): State<AppState>,
     Json(payload): Json<PureEquityAnswerRequest>,

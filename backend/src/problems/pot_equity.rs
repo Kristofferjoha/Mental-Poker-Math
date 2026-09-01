@@ -6,8 +6,6 @@ use std::sync::Arc;
 
 use crate::poker_core::{card::Card, deck::Deck};
 use crate::calculators::equity_calculator;
-use crate::preflop_data::preflop_lookup::PreflopEquity;
-use crate::calculators::preflop_scenarios::generate_preflop_scenario;
 use crate::problems::problem_helpers::{draw_board, Street};
 
 #[derive(Clone, Debug)]
@@ -25,7 +23,6 @@ pub struct PotEquityProblem {
 pub fn generate(
     allowed_streets_str: Vec<String>,
     allow_overbets: bool,
-    preflop_data: &[PreflopEquity],
     seven_card_tables: &Arc<TableSeven>,
 ) -> PotEquityProblem {
     let mut rng = rng();
@@ -44,26 +41,16 @@ pub fn generate(
     // Randomly choose one of the allowed streets.
     let chosen_street = allowed_streets.choose(&mut rng).unwrap();
 
-    // Generate hands and board based on chosen street.
-    let (player_hand, opponent_hand, board, player_equity) = if *chosen_street == Street::PreFlop {
-        generate_preflop_scenario(preflop_data, &mut deck, &mut rng, seven_card_tables)
-    } else {
-        // Postflop: deal two random hands and draw board cards.
-        let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
-        let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
-        let board = draw_board(&mut deck, chosen_street);
+    let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
+    let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
+    let board = draw_board(&mut deck, chosen_street);
 
-        let equity_result = equity_calculator::calculate_equity(
-            &player_hand, 
-            &opponent_hand, 
-            &board, 
-            25_000, 
-            seven_card_tables
-        );
-        let player_equity = equity_result.equity();
-
-        (player_hand, opponent_hand, board, player_equity)
-    };
+    let player_equity = equity_calculator::calculate_equity(
+        &[&player_hand, &opponent_hand],
+        &board,
+        seven_card_tables,
+    )
+    .hero() as f32;
 
     // Generate pot size and bet to call.
     let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;

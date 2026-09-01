@@ -34,8 +34,6 @@ fn test_state() -> AppState {
         pot_equity_cache: cache(),
         pure_equity_cache: cache(),
         pure_pot_odds_cache: cache(),
-        // no preflop scenarios are generated in these tests
-        preflop_equity_data: Arc::new(Vec::new()),
         seven_card_tables: build_tables(false),
     }
 }

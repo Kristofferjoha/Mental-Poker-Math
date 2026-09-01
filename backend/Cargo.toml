@@ -26,7 +26,5 @@ moka = { version = "0.12.10", features = ["sync"] }
 dotenvy = "0.15.7"
 
 [dev-dependencies]
-# Drives the axum Router directly in integration tests (ServiceExt::oneshot),
-# so handlers are exercised without binding a socket.
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"

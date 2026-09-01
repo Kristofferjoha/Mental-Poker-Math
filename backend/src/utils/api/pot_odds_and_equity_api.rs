@@ -66,7 +66,6 @@ pub async fn generate_pot_equity_problem(
     let problem = generate(
         allowed_streets,
         allow_overbets,
-        &app_state.preflop_equity_data,
         &app_state.seven_card_tables,
     );
 

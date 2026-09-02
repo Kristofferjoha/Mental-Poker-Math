@@ -78,6 +78,8 @@ pub fn build_router(app_state: AppState) -> Router {
         .route("/api/pot-equity-check-answer", post(api::check_pot_equity_answer))
         .route("/api/pure-equity-get-problem", get(api::generate_pure_equity_problem))
         .route("/api/pure-equity-check-answer", post(api::check_pure_equity_answer))
+        .route("/api/whats-the-nuts-get-problem", get(api::generate_nuts_problem))
+        .route("/api/whats-the-nuts-check-answer", post(api::check_nuts_answer))
         .with_state(app_state)
 }
 
@@ -107,6 +109,12 @@ pub async fn run() -> anyhow::Result<()> {
                 .build(),
         ),
         pure_equity_cache: Arc::new(
+            Cache::builder()
+                .time_to_live(CACHE_TTL)
+                .max_capacity(CACHE_MAX_CAPACITY)
+                .build(),
+        ),
+        nuts_cache: Arc::new(
             Cache::builder()
                 .time_to_live(CACHE_TTL)
                 .max_capacity(CACHE_MAX_CAPACITY)

@@ -4,6 +4,7 @@ use moka::sync::Cache; // Replaced HashMap and Mutex with moka::Cache
 use poker_eval::eval::seven::TableSeven;
 
 use crate::problems::pot_equity::PotEquityProblem;
+use crate::problems::whats_the_nuts::NutsProblem;
 use crate::problems::pure_equity::PureEqEquityProblem;
 
 /// Centralized, thread-safe application state for the Axum HTTP server.
@@ -16,5 +17,6 @@ use crate::problems::pure_equity::PureEqEquityProblem;
 pub struct AppState {
     pub pot_equity_cache: Arc<Cache<Uuid, PotEquityProblem>>,
     pub pure_equity_cache: Arc<Cache<Uuid, PureEqEquityProblem>>,
+    pub nuts_cache: Arc<Cache<Uuid, NutsProblem>>,
     pub seven_card_tables: Arc<TableSeven>,
 }

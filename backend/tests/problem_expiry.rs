@@ -33,6 +33,7 @@ fn test_state() -> AppState {
     AppState {
         pot_equity_cache: cache(),
         pure_equity_cache: cache(),
+        nuts_cache: cache(),
         seven_card_tables: build_tables(false),
     }
 }

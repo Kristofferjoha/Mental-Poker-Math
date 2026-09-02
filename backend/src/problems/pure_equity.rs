@@ -9,8 +9,8 @@ use crate::problems::problem_helpers::{draw_board, Street};
 
 #[derive(Clone, Debug)]
 pub struct PureEqEquityProblem {
-    pub player_hand: Vec<Card>,
-    pub opponent_hand: Vec<Card>,
+    /// One entry per seat; `hands[0]` is always the hero.
+    pub hands: Vec<Vec<Card>>,
     pub board: Vec<Card>,
     pub player_equity: f32,
     pub lower_bound_equity: f32,
@@ -21,6 +21,7 @@ pub struct PureEqEquityProblem {
 
 pub fn generate(
     allowed_streets_str: Vec<String>,
+    num_players: usize,
     tolerance: f32,
     directional_hints_active: bool,
     seven_card_tables: &Arc<TableSeven>,
@@ -43,16 +44,14 @@ pub fn generate(
     let chosen_street = allowed_streets.choose(&mut rng).unwrap();
 
 
-    let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
-    let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
+    let hands: Vec<Vec<Card>> = (0..num_players)
+        .map(|_| vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()])
+        .collect();
     let board = draw_board(&mut deck, chosen_street);
 
-    let player_equity = equity_calculator::calculate_equity(
-        &[&player_hand, &opponent_hand],
-        &board,
-        seven_card_tables,
-    )
-    .hero() as f32;
+    let seats: Vec<&[Card]> = hands.iter().map(|h| h.as_slice()).collect();
+    let player_equity =
+        equity_calculator::calculate_equity(&seats, &board, seven_card_tables).hero() as f32;
 
     // Convert equity to percentage and calculate bounds.
     let player_equity_percentage = player_equity * 100.0;
@@ -60,8 +59,7 @@ pub fn generate(
     let upper_bound_equity = (player_equity_percentage + tolerance).min(100.0);
 
     PureEqEquityProblem {
-        player_hand,
-        opponent_hand,
+        hands,
         board,
         player_equity: player_equity_percentage,
         lower_bound_equity,

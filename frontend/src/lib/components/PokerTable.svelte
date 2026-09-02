@@ -18,8 +18,9 @@
 
 	$: {
 		if (problem) {
-			playerHandDisplay = padHand(problem.player_hand, 2);
-			opponentHandDisplay = padHand(problem.opponent_hand, 2);
+
+			playerHandDisplay = padHand(problem.hands?.[0], 2);
+			opponentHandDisplay = padHand(problem.hands?.[1], 2);
 			boardDisplay = padHand(problem.board, 5);
 			playerHandDisplay.forEach(card => {
 			if (card) {

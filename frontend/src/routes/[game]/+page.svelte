@@ -158,10 +158,10 @@
 	let sessionHistory: HistoryItem[] = [];
 
 	function isPureEquityProblem(p: AnyProblem | null): p is PureEquityProblem {
-		return !!p && 'player_hand' in p && !('pot_size' in p);
+		return !!p && 'hands' in p && !('pot_size' in p);
 	}
 	function isPotEquityProblem(p: AnyProblem | null): p is PotEquityProblem {
-		return !!p && 'pot_size' in p && 'player_hand' in p;
+		return !!p && 'pot_size' in p && 'hands' in p;
 	}
 
 	function handleGameStart() {
@@ -443,33 +443,6 @@
 	.fold-btn {
 		background: var(--red);
 		color: white;
-	}
-	.feedback-box {
-		padding: 1.5rem;
-		border-radius: var(--border-radius-lg);
-		border: 2px solid;
-		max-width: 400px;
-		margin: 0 auto;
-		animation: fadeIn 0.3s ease-in-out;
-	}
-	.feedback-box.correct {
-		background-color: rgba(16, 185, 129, 0.1);
-		border-color: var(--green);
-		color: #a7f3d0;
-	}
-	.feedback-box.wrong {
-		background-color: rgba(239, 68, 68, 0.1);
-		border-color: var(--red);
-		color: #fca5a5;
-	}
-	.feedback-box p {
-		margin: 0.3rem 0;
-		color: inherit;
-	}
-	.feedback-title {
-		font-size: 1.4rem;
-		font-weight: 700;
-		margin-bottom: 0.8rem !important;
 	}
 
 	.error-box {

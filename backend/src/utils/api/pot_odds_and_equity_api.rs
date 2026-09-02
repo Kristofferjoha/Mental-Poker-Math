@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 use crate::poker_core::card::Card;
 use crate::problems::pot_equity::generate;
+use crate::calculators::equity_calculator::MAX_PLAYERS;
 use crate::utils::api::ApiError;
 use crate::utils::app_state::AppState;
 
@@ -12,9 +13,9 @@ use crate::utils::app_state::AppState;
 #[derive(Serialize)]
 pub struct PotEquityProblemResponse {
     pub problem_id: Uuid,
-    pub player_hand: Vec<Card>,
-    pub opponent_hand: Vec<Card>,
+    pub hands: Vec<Vec<Card>>,
     pub board: Vec<Card>,
+    pub num_players: usize,
     pub pot_size: u32,
     pub bet_to_call: u32,
 }
@@ -40,6 +41,23 @@ pub struct PotEquityAnswerResponse {
     pub pot_odds: f32,
 }
 
+fn parse_num_players(params: &HashMap<String, String>) -> Result<usize, ApiError> {
+    let Some(raw) = params.get("numPlayers") else {
+        return Ok(2);
+    };
+    let parsed: usize = raw.parse().map_err(|_| ApiError::InvalidParameter {
+        name: "numPlayers",
+        detail: format!("expected a whole number, got {raw:?}"),
+    })?;
+    if !(2..=MAX_PLAYERS).contains(&parsed) {
+        return Err(ApiError::InvalidParameter {
+            name: "numPlayers",
+            detail: format!("must be between 2 and {MAX_PLAYERS}, got {parsed}"),
+        });
+    }
+    Ok(parsed)
+}
+
 /// Generates a new Pot Equity problem.
 ///
 /// `streets` (optional): comma-separated list of allowed streets (default: pre-flop, flop, turn, river)
@@ -47,7 +65,9 @@ pub struct PotEquityAnswerResponse {
 pub async fn generate_pot_equity_problem(
     State(app_state): State<AppState>,
     Query(params): Query<HashMap<String, String>>,
-) -> Json<PotEquityProblemResponse> {
+) -> Result<Json<PotEquityProblemResponse>, ApiError> {
+    let num_players = parse_num_players(&params)?;
+
 
     let allowed_streets = params
         .get("streets")
@@ -65,6 +85,7 @@ pub async fn generate_pot_equity_problem(
 
     let problem = generate(
         allowed_streets,
+        num_players,
         allow_overbets,
         &app_state.seven_card_tables,
     );
@@ -75,14 +96,14 @@ pub async fn generate_pot_equity_problem(
         .pot_equity_cache
         .insert(problem_id, problem.clone());
 
-    Json(PotEquityProblemResponse {
+    Ok(Json(PotEquityProblemResponse {
         problem_id,
-        player_hand: problem.player_hand,
-        opponent_hand: problem.opponent_hand,
+        hands: problem.hands,
         board: problem.board,
+        num_players,
         pot_size: problem.pot_size,
         bet_to_call: problem.bet_to_call,
-    })
+    }))
 }
 
 /// Checks a submitted Pot Equity answer.

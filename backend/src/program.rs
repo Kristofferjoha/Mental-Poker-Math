@@ -1,5 +1,5 @@
 use axum::{Router, routing::{get, post}};
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{AllowOrigin, CorsLayer};
 use std::{net::SocketAddr, sync::Arc, time::Duration, env};
 use tracing::{info, warn};
 use poker_eval::eval::seven as seven_eval;
@@ -8,14 +8,24 @@ use axum::http::{header, HeaderValue, Method};
 
 use crate::utils::{api, app_state::AppState};
 
+
 const DEFAULT_ALLOWED_ORIGINS: &[&str] = &[
     "https://mentalpokermath.com",
     "https://www.mentalpokermath.com",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
 ];
+
+pub fn is_localhost_origin(origin: &HeaderValue) -> bool {
+    let Ok(text) = origin.to_str() else {
+        return false;
+    };
+    let Some(authority) = text.strip_prefix("http://") else {
+        return false;
+    };
+    matches!(
+        authority.split(':').next(),
+        Some("localhost") | Some("127.0.0.1")
+    )
+}
 
 fn validate_origin(entry: &str) -> Result<HeaderValue, String> {
     let host = entry
@@ -107,7 +117,7 @@ pub async fn run() -> anyhow::Result<()> {
 
     let origins = allowed_origins()?;
     info!(
-        "CORS allow-list: {}",
+        "CORS allow-list: {} (plus any http://localhost or http://127.0.0.1 port)",
         origins
             .iter()
             .filter_map(|o| o.to_str().ok())
@@ -116,7 +126,9 @@ pub async fn run() -> anyhow::Result<()> {
     );
 
     let cors = CorsLayer::new()
-        .allow_origin(origins)
+        .allow_origin(AllowOrigin::predicate(move |origin, _| {
+            origins.iter().any(|allowed| allowed == origin) || is_localhost_origin(origin)
+        }))
         .allow_methods([Method::GET, Method::POST])
         .allow_headers([header::CONTENT_TYPE]);
 

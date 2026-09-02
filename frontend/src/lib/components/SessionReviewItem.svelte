@@ -38,19 +38,21 @@
 		<div class="hand-group">
 			<div class="label">You</div>
 			<div class="cards">
-				{#each item.problem.player_hand as card}
+				{#each item.problem.hands[0] as card}
 					<Card {card} />
 				{/each}
 			</div>
 		</div>
-		<div class="hand-group">
-			<div class="label">Opponent</div>
-			<div class="cards">
-				{#each item.problem.opponent_hand as card}
-					<Card {card} />
-				{/each}
+		{#each item.problem.hands.slice(1) as villain, i}
+			<div class="hand-group">
+				<div class="label">{item.problem.hands.length > 2 ? `Opponent ${i + 1}` : 'Opponent'}</div>
+				<div class="cards">
+					{#each villain as card}
+						<Card {card} />
+					{/each}
+				</div>
 			</div>
-		</div>
+		{/each}
 	</div>
 
 	{#if item.problem.board.length > 0}

@@ -16,6 +16,7 @@ pub struct ApiErrorBody {
 #[derive(Debug)]
 pub enum ApiError {
     ProblemGone(Uuid),
+    InvalidParameter { name: &'static str, detail: String },
 }
 
 impl IntoResponse for ApiError {
@@ -36,6 +37,14 @@ impl IntoResponse for ApiError {
                 )
                     .into_response()
             }
+            ApiError::InvalidParameter { name, detail } => (
+                StatusCode::BAD_REQUEST,
+                Json(ApiErrorBody {
+                    error: "invalid_parameter",
+                    message: format!("Query parameter `{name}` is invalid: {detail}"),
+                }),
+            )
+                .into_response(),
         }
     }
 }

@@ -5,16 +5,16 @@ use std::collections::HashMap;
 
 use crate::poker_core::card::Card;
 use crate::problems::pure_equity::generate;
+use crate::calculators::equity_calculator::MAX_PLAYERS;
 use crate::utils::api::ApiError;
 use crate::utils::app_state::AppState;
 
-/// Response returned when a new Pure Equity problem is generated.
 #[derive(Serialize)]
 pub struct PureEquityProblemResponse {
     pub problem_id: Uuid,
-    pub player_hand: Vec<Card>,
-    pub opponent_hand: Vec<Card>,
+    pub hands: Vec<Vec<Card>>,
     pub board: Vec<Card>,
+    pub num_players: usize,
 }
 
 /// Request sent by the client to check a submitted Pure Equity answer.
@@ -36,6 +36,23 @@ pub struct PureEquityAnswerResponse {
     pub directional_hint: String,              // "Higher", "Lower", or "Not-Active"
 }
 
+fn parse_num_players(params: &HashMap<String, String>) -> Result<usize, ApiError> {
+    let Some(raw) = params.get("numPlayers") else {
+        return Ok(2);
+    };
+    let parsed: usize = raw.parse().map_err(|_| ApiError::InvalidParameter {
+        name: "numPlayers",
+        detail: format!("expected a whole number, got {raw:?}"),
+    })?;
+    if !(2..=MAX_PLAYERS).contains(&parsed) {
+        return Err(ApiError::InvalidParameter {
+            name: "numPlayers",
+            detail: format!("must be between 2 and {MAX_PLAYERS}, got {parsed}"),
+        });
+    }
+    Ok(parsed)
+}
+
 /// Generates a new Pure Equity problem.
 ///
 /// `streets` (optional): comma-separated list of allowed streets (default: pre-flop, flop, turn, river)
@@ -45,7 +62,9 @@ pub struct PureEquityAnswerResponse {
 pub async fn generate_pure_equity_problem(
     State(app_state): State<AppState>,
     Query(params): Query<HashMap<String, String>>,
-) -> Json<PureEquityProblemResponse> {
+) -> Result<Json<PureEquityProblemResponse>, ApiError> {
+    let num_players = parse_num_players(&params)?;
+
     let allowed_streets = params
         .get("streets")
         .map(|s| s.split(',').map(String::from).collect())
@@ -68,6 +87,7 @@ pub async fn generate_pure_equity_problem(
 
     let problem = generate(
         allowed_streets,
+        num_players,
         tolerance,
         directional_hints_active,
         &app_state.seven_card_tables,
@@ -80,12 +100,12 @@ pub async fn generate_pure_equity_problem(
         .pure_equity_cache
         .insert(problem_id, problem.clone());
 
-    Json(PureEquityProblemResponse {
+    Ok(Json(PureEquityProblemResponse {
         problem_id,
-        player_hand: problem.player_hand,
-        opponent_hand: problem.opponent_hand,
+        hands: problem.hands,
         board: problem.board,
-    })
+        num_players,
+    }))
 }
 
 /// Checks a submitted Pure Equity answer.

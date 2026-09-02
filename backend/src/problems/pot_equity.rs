@@ -10,8 +10,7 @@ use crate::problems::problem_helpers::{draw_board, Street};
 
 #[derive(Clone, Debug)]
 pub struct PotEquityProblem {
-    pub player_hand: Vec<Card>,
-    pub opponent_hand: Vec<Card>,
+    pub hands: Vec<Vec<Card>>,
     pub board: Vec<Card>,
     pub pot_size: u32,
     pub bet_to_call: u32,
@@ -22,6 +21,7 @@ pub struct PotEquityProblem {
 
 pub fn generate(
     allowed_streets_str: Vec<String>,
+    num_players: usize,
     allow_overbets: bool,
     seven_card_tables: &Arc<TableSeven>,
 ) -> PotEquityProblem {
@@ -41,16 +41,14 @@ pub fn generate(
     // Randomly choose one of the allowed streets.
     let chosen_street = allowed_streets.choose(&mut rng).unwrap();
 
-    let player_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
-    let opponent_hand = vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()];
+    let hands: Vec<Vec<Card>> = (0..num_players)
+        .map(|_| vec![deck.cards.pop().unwrap(), deck.cards.pop().unwrap()])
+        .collect();
     let board = draw_board(&mut deck, chosen_street);
 
-    let player_equity = equity_calculator::calculate_equity(
-        &[&player_hand, &opponent_hand],
-        &board,
-        seven_card_tables,
-    )
-    .hero() as f32;
+    let seats: Vec<&[Card]> = hands.iter().map(|h| h.as_slice()).collect();
+    let player_equity =
+        equity_calculator::calculate_equity(&seats, &board, seven_card_tables).hero() as f32;
 
     // Generate pot size and bet to call.
     let pot_size = (rng.random_range(10_000..100_000) / 1000) * 1000;
@@ -58,8 +56,7 @@ pub fn generate(
     let pot_odds = bet_to_call as f32 / (pot_size + bet_to_call+bet_to_call) as f32;
 
     PotEquityProblem {
-        player_hand,
-        opponent_hand,
+        hands,
         board,
         pot_size,
         bet_to_call,

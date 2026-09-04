@@ -1,6 +1,6 @@
 use poker_eval::eval::seven::{get_rank, TableSeven};
-use rand::prelude::SliceRandom;
-use rand::rng;
+use rand::prelude::{IndexedRandom, SliceRandom};
+use rand::{rng, Rng};
 
 use crate::calculators::calculator_helpers::{card_from_poker_eval_id, card_to_poker_eval_id};
 use crate::poker_core::{card::Card, deck::Deck};
@@ -9,7 +9,7 @@ use crate::poker_core::{card::Card, deck::Deck};
 pub enum Difficulty {
     Easy,
     Medium,
-    Hard,
+    Hard
 }
 
 impl Difficulty {
@@ -18,7 +18,7 @@ impl Difficulty {
             "easy" => Some(Difficulty::Easy),
             "medium" => Some(Difficulty::Medium),
             "hard" => Some(Difficulty::Hard),
-            _ => None,
+            _ => None
         }
     }
 
@@ -38,12 +38,18 @@ impl Difficulty {
         }
     }
 
-    fn distractor_positions(self, available: usize) -> Vec<usize> {
+    fn distractor_positions(self, available: usize, rng: &mut impl Rng) -> Vec<usize> {
         if available == 0 {
             return Vec::new();
         }
         let wanted: Vec<usize> = match self {
-            Difficulty::Hard => vec![1, 2, 3, 5, 9],
+            Difficulty::Hard => {
+                let mut pool: Vec<usize> = (2..=12).collect();
+                pool.shuffle(rng);
+                let mut chosen = vec![1];
+                chosen.extend(pool.into_iter().take(4));
+                chosen
+            }
             Difficulty::Medium => [0.004, 0.02, 0.10, 0.40]
                 .iter()
                 .map(|f| ((available as f64 * f).round() as usize).max(1))
@@ -70,12 +76,48 @@ impl Difficulty {
         chosen
     }
 
-    fn time_limit_ms(self) -> u32 {
-        match self {
-            Difficulty::Easy => 5_000,
-            Difficulty::Medium => 3_000,
-            Difficulty::Hard => 2_000
-        }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Texture {
+    Flush,
+    Paired,
+    Connected,
+    Dry
+}
+
+const TEXTURES: [Texture; 4] = [Texture::Flush, Texture::Paired, Texture::Connected, Texture::Dry];
+
+fn faces(board: &[Card]) -> Vec<i32> {
+    board
+        .iter()
+        .map(|c| (card_to_poker_eval_id(c) / 4) as i32)
+        .collect()
+}
+
+fn is_paired(board: &[Card]) -> bool {
+    let mut f = faces(board);
+    f.sort_unstable();
+    f.windows(2).any(|w| w[0] == w[1])
+}
+
+fn is_connected(board: &[Card]) -> bool {
+    let mut f = faces(board);
+    if f.contains(&12) {
+        f.push(-1);
+    }
+    f.sort_unstable();
+    f.dedup();
+    f.windows(3).any(|w| w[2] - w[0] <= 4)
+}
+
+fn has_texture(texture: Texture, board: &[Card]) -> bool {
+    let suited = max_suited(board);
+    match texture {
+        Texture::Flush => suited == 4,
+        Texture::Paired => suited <= 2 && is_paired(board),
+        Texture::Connected => suited <= 2 && !is_paired(board) && is_connected(board),
+        Texture::Dry => suited <= 2 && !is_paired(board) && !is_connected(board)
     }
 }
 
@@ -84,7 +126,6 @@ pub struct NutsProblem {
     pub board: Vec<Card>,
     pub candidates: Vec<Vec<Card>>,
     pub correct_index: usize,
-    pub time_limit_ms: u32,
     pub difficulty: Difficulty
 }
 
@@ -123,6 +164,7 @@ pub fn generate(difficulty: Difficulty, tables: &TableSeven) -> NutsProblem {
     let mut rng = rng();
 
     let target = difficulty.board_suit_target();
+    let texture = (difficulty == Difficulty::Hard).then(|| *TEXTURES.choose(&mut rng).unwrap());
 
     const MIN_DISTINCT_RANKS: usize = 24;
 
@@ -132,11 +174,11 @@ pub fn generate(difficulty: Difficulty, tables: &TableSeven) -> NutsProblem {
         let mut deck = Deck::new();
         deck.shuffle(&mut rng);
         let candidate: Vec<Card> = (0..5).map(|_| deck.cards.pop().unwrap()).collect();
-        let suited = max_suited(&candidate);
 
-        let texture_ok = match difficulty {
-            Difficulty::Easy => suited <= target,
-            _ => suited == target,
+        let texture_ok = match texture {
+            Some(t) => has_texture(t, &candidate),
+            None if difficulty == Difficulty::Easy => max_suited(&candidate) <= target,
+            None => max_suited(&candidate) == target,
         };
 
         if texture_ok || attempt == 499 {
@@ -152,7 +194,7 @@ pub fn generate(difficulty: Difficulty, tables: &TableSeven) -> NutsProblem {
     let (nut_rank, nut_cards) = ranked[0];
 
     let mut picks: Vec<[usize; 2]> = vec![nut_cards];
-    for position in difficulty.distractor_positions(ranked.len() - 1) {
+    for position in difficulty.distractor_positions(ranked.len() - 1, &mut rng) {
         let (rank, cards) = ranked[position];
         debug_assert!(rank < nut_rank, "distractor must be strictly worse than the nuts");
         picks.push(cards);
@@ -173,7 +215,6 @@ pub fn generate(difficulty: Difficulty, tables: &TableSeven) -> NutsProblem {
         board,
         candidates,
         correct_index,
-        time_limit_ms: difficulty.time_limit_ms(),
-        difficulty,
+        difficulty
     }
 }

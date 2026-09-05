@@ -65,7 +65,7 @@ fn equities_sum_to_one_for_every_seat_count() {
         hand("QsQh"),
         hand("JsJh"),
         hand("TsTh"),
-        hand("9s9h"),
+        hand("9s9h")
     ];
 
     for seats in 2..=6 {

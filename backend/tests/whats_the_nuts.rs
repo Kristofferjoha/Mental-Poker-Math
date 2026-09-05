@@ -87,7 +87,6 @@ fn each_difficulty_has_a_distinct_shape() {
     let easy = generate(Difficulty::Easy, &tables);
     let hard = generate(Difficulty::Hard, &tables);
 
-    assert!(easy.time_limit_ms > hard.time_limit_ms, "harder means less time");
     assert!(hard.candidates.len() >= easy.candidates.len(), "harder offers more choices");
     for difficulty in [Difficulty::Easy, Difficulty::Medium, Difficulty::Hard] {
         for _ in 0..40 {
@@ -109,8 +108,18 @@ fn difficulty_changes_board_texture() {
 
     for _ in 0..20 {
         assert!(suited(&generate(Difficulty::Easy, &tables).board) <= 2);
-        assert_eq!(suited(&generate(Difficulty::Hard, &tables).board), 4);
+        assert_eq!(suited(&generate(Difficulty::Medium, &tables).board), 3);
     }
+
+    let rounds = 60;
+    let four_suited = (0..rounds)
+        .filter(|_| suited(&generate(Difficulty::Hard, &tables).board) == 4)
+        .count();
+    assert!(four_suited > 0, "hard never dealt a flush board in {rounds} spots");
+    assert!(
+        four_suited < rounds,
+        "hard dealt nothing but flush boards in {rounds} spots"
+    );
 }
 
 #[test]

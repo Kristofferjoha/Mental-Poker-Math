@@ -24,7 +24,7 @@ mod cors_allow_list {
         let _guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
         match value {
             Some(v) => std::env::set_var("CORS_ALLOWED_ORIGINS", v),
-            None => std::env::remove_var("CORS_ALLOWED_ORIGINS"),
+            None => std::env::remove_var("CORS_ALLOWED_ORIGINS")
         }
         f();
         std::env::remove_var("CORS_ALLOWED_ORIGINS");
@@ -47,7 +47,7 @@ mod cors_allow_list {
             "http://localhost:5174",
             "http://127.0.0.1:5173",
             "http://localhost:3000",
-            "http://127.0.0.1:41234",
+            "http://127.0.0.1:41234"
         ] {
             let value = origin.parse::<HeaderValue>().unwrap();
             assert!(is_localhost_origin(&value), "{origin} should be allowed");
@@ -60,7 +60,7 @@ mod cors_allow_list {
             "http://evil.example",
             "https://localhost:5173",
             "http://localhost.evil.example",
-            "http://notlocalhost:5173",
+            "http://notlocalhost:5173"
         ] {
             let value = origin.parse::<HeaderValue>().unwrap();
             assert!(!is_localhost_origin(&value), "{origin} must not be allowed");

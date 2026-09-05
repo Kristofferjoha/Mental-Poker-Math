@@ -17,7 +17,7 @@ fn cache<V: Clone + Send + Sync + 'static>() -> Arc<Cache<Uuid, V>> {
         Cache::builder()
             .time_to_live(Duration::from_secs(60))
             .max_capacity(100)
-            .build(),
+            .build()
     )
 }
 
@@ -26,7 +26,8 @@ fn state() -> AppState {
         pot_equity_cache: cache(),
         pure_equity_cache: cache(),
         nuts_cache: cache(),
-        seven_card_tables: build_tables(false),
+        koth_cache: cache(),
+        seven_card_tables: build_tables(false)
     }
 }
 
@@ -39,7 +40,7 @@ async fn get(uri: &str) -> (StatusCode, serde_json::Value) {
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     (
         status,
-        serde_json::from_slice(&bytes).unwrap_or(serde_json::Value::Null),
+        serde_json::from_slice(&bytes).unwrap_or(serde_json::Value::Null)
     )
 }
 
@@ -72,7 +73,7 @@ async fn every_seat_count_deals_the_right_number_of_hands() {
 }
 
 #[tokio::test]
-async fn six_way_deals_seventeen_distinct_cards() {
+async fn six_way_deals_distinct_cards() {
     let (_, body) = get("/api/pure-equity-get-problem?streets=river&numPlayers=6").await;
     let mut seen = std::collections::HashSet::new();
     for hand in body["hands"].as_array().unwrap() {
@@ -105,4 +106,95 @@ async fn street_and_seat_count_are_independent() {
     let (_, river) = get("/api/pure-equity-get-problem?streets=river&numPlayers=3").await;
     assert_eq!(river["board"].as_array().unwrap().len(), 5);
     assert_eq!(river["num_players"], 3);
+}
+
+#[tokio::test]
+async fn pot_odds_never_poses_a_river() {
+    for _ in 0..12 {
+        let (status, body) = get("/api/pot-equity-get-problem?numPlayers=2").await;
+        assert_eq!(status, StatusCode::OK);
+        let board = body["board"].as_array().unwrap().len();
+        assert!(board < 5, "pot odds dealt a complete board: {board} cards");
+    }
+}
+
+#[tokio::test]
+async fn unusable_parameters_are_refused() {
+    for uri in [
+        "/api/pure-equity-get-problem?streets=banana",
+        "/api/pure-equity-get-problem?streets=flop,banana",
+        "/api/pure-equity-get-problem?tolerance=banana",
+        "/api/pure-equity-get-problem?tolerance=0",
+        "/api/pure-equity-get-problem?tolerance=90",
+        "/api/pot-equity-get-problem?streets=river",
+        "/api/king-of-the-hill-get-problem?streets=river"
+    ] {
+        let (status, body) = get(uri).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST, "{uri} was accepted");
+        assert_eq!(body["error"], "invalid_parameter", "{uri}");
+    }
+}
+
+#[tokio::test]
+async fn offered_streets_are_accepted() {
+    for (uri, cards) in [
+        ("/api/pure-equity-get-problem?streets=river", 5),
+        ("/api/pure-equity-get-problem?streets=flop,flop", 3),
+        ("/api/pure-equity-get-problem?streets=turn", 4)
+    ] {
+        let (status, body) = get(uri).await;
+        assert_eq!(status, StatusCode::OK, "{uri} was refused");
+        assert_eq!(body["board"].as_array().unwrap().len(), cards, "{uri}");
+    }
+}
+
+#[tokio::test]
+async fn nuts_accepts_an_answer_with_no_selection() {
+    let app = build_router(state());
+
+    let generated = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/api/whats-the-nuts-get-problem")
+                .body(Body::empty())
+                .unwrap()
+        )
+        .await
+        .unwrap();
+    let bytes = generated.into_body().collect().await.unwrap().to_bytes();
+    let problem: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    let id = problem["problem_id"].as_str().expect("problem_id");
+
+    let answered = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/whats-the-nuts-check-answer")
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    serde_json::json!({
+                        "problemId": id,
+                        "selectedIndex": serde_json::Value::Null
+                    })
+                    .to_string()
+                ))
+                .unwrap()
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(answered.status(), StatusCode::OK);
+    let bytes = answered.into_body().collect().await.unwrap().to_bytes();
+    let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(body["correct"], false);
+    assert!(body["correctHand"].as_array().is_some_and(|h| h.len() == 2));
+}
+
+#[tokio::test]
+async fn health_reports_the_running_build() {
+    let (status, body) = get("/api/health").await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["status"], "ok");
+    assert_eq!(body["version"], env!("CARGO_PKG_VERSION"));
 }

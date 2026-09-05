@@ -1,0 +1,25 @@
+.spot { min-height: 488px; }
+
+.answerArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding-top: 0.9rem;
+}
+
+
+.input {
+  width: 15rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 1.25rem;
+  text-align: center;
+  letter-spacing: 0.03em;
+}
+
+.tip {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}

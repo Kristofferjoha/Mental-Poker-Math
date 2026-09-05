@@ -1,0 +1,17 @@
+.spot { min-height: 480px; display: flex; flex-direction: column; gap: 1.1rem; }
+
+.actions { display: flex; gap: 0.75rem; align-self: center; }
+.call, .fold { min-width: 8rem; font-size: 1rem; padding: 0.7rem 1.2rem; }
+.call:hover:not(:disabled)  { border-color: var(--good); }
+.fold:hover:not(:disabled)  { border-color: var(--bad); }
+
+.kbd {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  margin-left: 0.45rem;
+}
+
+.right, .wrong { opacity: 1 !important; }
+.right { border-color: var(--good); background: var(--good-wash); color: var(--good); }
+.wrong { border-color: var(--bad);  background: var(--bad-wash);  color: var(--bad); }

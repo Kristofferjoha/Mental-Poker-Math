@@ -1,0 +1,99 @@
+:root {
+
+  --bg:            #0a0b0d;
+  --bg-lift:       #16181d;
+  --surface:       #131417;
+  --surface-lift:  #1a1c20;
+  --line:          #24262b;
+  --line-strong:   #34373d;
+
+
+  --text:          #e6e7ea;
+  --text-dim:      #9a9da5;
+  --text-faint:    #62666e;
+
+
+  --accent:        #e0a83c;
+  --accent-dim:    #6b5220;
+  --accent-wash:   rgba(224, 168, 60, 0.09);
+
+
+  --good:          #6fae72;
+  --good-wash:     rgba(111, 174, 114, 0.09);
+  --bad:           #cd6b64;
+  --bad-wash:      rgba(205, 107, 100, 0.09);
+
+
+  --card-face:     #f4f2ee;
+  --card-edge:     #cfcbc3;
+  --card-black:    #17181a;
+  --card-red:      #b8302c;
+
+
+  --card-back:      #16202b;
+  --card-back-line: rgba(224, 168, 60, 0.16);
+  --card-back-edge: #26333f;
+
+  --gap:  1rem;
+  --rule: 1px solid var(--line);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+
+.num {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+
+.label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+  background: var(--surface-lift);
+  border: var(--rule);
+  border-radius: 2px;
+  padding: 0.55rem 1rem;
+  transition: border-color 100ms linear, background 100ms linear;
+}
+button:hover:not(:disabled) { border-color: var(--line-strong); background: var(--surface); }
+
+button:disabled { opacity: 0.4; cursor: default; }
+button:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+input, select {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: 2px;
+  padding: 0.5rem 0.7rem;
+}
+input:focus-visible, select:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

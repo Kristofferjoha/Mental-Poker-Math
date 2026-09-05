@@ -1,0 +1,68 @@
+.card {
+  position: relative;
+  flex: none;
+  background: var(--card-face);
+  border: 1px solid var(--card-edge);
+  border-radius: 3px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+.black { color: var(--card-black); }
+.red   { color: var(--card-red); }
+.dimmed { opacity: 0.35; }
+
+
+.slot {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--line);
+}
+
+
+.rank {
+  position: absolute;
+  top: 0.28em;
+  left: 0.34em;
+  font-size: var(--rank-size);
+  letter-spacing: -0.03em;
+}
+
+.pip {
+  width: var(--pip-size);
+  height: var(--pip-size);
+  margin-top: 0.35em;
+}
+
+
+.pips {
+  position: absolute;
+  left: 11%;
+  right: 11%;
+  top: 27%;
+  bottom: 7%;
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(13, minmax(0, 1fr));
+  place-items: center;
+
+  padding: calc(var(--laid-pip) / 2) 0;
+}
+
+.laidPip {
+  width: var(--laid-pip);
+  height: var(--laid-pip);
+}
+
+
+.inverted { transform: rotate(180deg); }
+
+.lg { width: 76px;  height: 106px; --rank-size: 20px; --pip-size: 34px; --laid-pip: 15px; }
+.md { width: 56px;  height: 78px;  --rank-size: 15px; --pip-size: 26px; --laid-pip: 11px; }
+.sm { width: 40px;  height: 56px;  --rank-size: 11px; --pip-size: 19px; --laid-pip: 8px;  }
+
+.row { display: flex; gap: 5px; }

@@ -1,0 +1,93 @@
+.table {
+  position: relative;
+  width: min(calc(360px + 56px * var(--seats, 6)), 100%);
+
+  height: 400px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: radial-gradient(ellipse at 50% 46%, var(--surface-lift) 0%, var(--surface) 78%);
+
+  isolation: isolate;
+}
+
+
+.table::before {
+  content: '';
+  position: absolute;
+  inset: 13px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+
+.ring { display: contents; }
+
+.seat {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.centre {
+  position: absolute;
+  left: 50%;
+
+  top: 45%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.street { color: var(--text-faint); }
+
+
+.money { display: flex; gap: 2.25rem; margin-top: 0.15rem; }
+.moneyItem { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+.moneyValue { font-size: 1.05rem; color: var(--text); }
+
+
+
+.hero {
+  left: 50%;
+  top: 82%;
+}
+
+.heroLabel { color: var(--accent); }
+.seatEquity { font-size: 0.8rem; color: var(--text-dim); }
+.heroEquity { font-size: 1.05rem; color: var(--accent); }
+
+
+@media (max-width: 760px) {
+  .table {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.1rem;
+    padding: 1.2rem 0.75rem;
+  }
+  .table::before { display: none; }
+
+
+  .ring {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .seat, .centre {
+    position: static;
+    transform: none;
+  }
+}

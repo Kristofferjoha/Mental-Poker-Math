@@ -1,15 +1,18 @@
 use serde::{Serialize, Deserialize};
 use strum_macros::EnumIter;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter)] 
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
+#[derive(Default)]
 pub enum Suit {
     Hearts,
     Diamonds,
     Clubs,
-    Spades,
+    #[default]
+    Spades
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, EnumIter)]
+#[derive(Default)]
 pub enum Rank {
     Two,
     Three,
@@ -23,30 +26,19 @@ pub enum Rank {
     Jack,
     Queen,
     King,
-    Ace,
+    #[default]
+    Ace
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Card {
     pub suit: Suit,
-    pub rank: Rank,
-}
-
-impl Default for Suit {
-    fn default() -> Self {
-        Suit::Spades
-    }
-}
-
-impl Default for Rank {
-    fn default() -> Self {
-        Rank::Ace
-    }
+    pub rank: Rank
 }
 
 pub fn parse_cards(s: &str) -> Result<Vec<Card>, &'static str> {
     let chars: Vec<char> = s.chars().collect();
-    if chars.is_empty() || chars.len() % 2 != 0 {
+    if chars.is_empty() || !chars.len().is_multiple_of(2) {
         return Err("Card string length must be a non-zero multiple of 2.");
     }
 
@@ -54,7 +46,7 @@ pub fn parse_cards(s: &str) -> Result<Vec<Card>, &'static str> {
     for pair in chars.chunks_exact(2) {
         let card = Card {
             rank: char_to_rank(pair[0])?,
-            suit: char_to_suit(pair[1])?,
+            suit: char_to_suit(pair[1])?
         };
         if cards.contains(&card) {
             return Err("Duplicate card.");
@@ -87,7 +79,7 @@ fn char_to_rank(c: char) -> Result<Rank, &'static str> {
         '4' => Ok(Rank::Four),
         '3' => Ok(Rank::Three),
         '2' => Ok(Rank::Two),
-        _ => Err("Invalid rank character"),
+        _ => Err("Invalid rank character")
     }
 }
 
@@ -97,6 +89,6 @@ fn char_to_suit(c: char) -> Result<Suit, &'static str> {
         'h' => Ok(Suit::Hearts),
         'd' => Ok(Suit::Diamonds),
         'c' => Ok(Suit::Clubs),
-        _ => Err("Invalid suit character"),
+        _ => Err("Invalid suit character")
     }
 }

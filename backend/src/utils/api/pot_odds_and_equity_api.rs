@@ -5,11 +5,9 @@ use std::collections::HashMap;
 
 use crate::poker_core::card::Card;
 use crate::problems::pot_equity::generate;
-use crate::calculators::equity_calculator::MAX_PLAYERS;
-use crate::utils::api::ApiError;
+use crate::utils::api::{params, ApiError};
 use crate::utils::app_state::AppState;
 
-/// Response returned when a new Pot Equity problem is generated.
 #[derive(Serialize)]
 pub struct PotEquityProblemResponse {
     pub problem_id: Uuid,
@@ -17,77 +15,45 @@ pub struct PotEquityProblemResponse {
     pub board: Vec<Card>,
     pub num_players: usize,
     pub pot_size: u32,
-    pub bet_to_call: u32,
+    pub bet_to_call: u32
 }
 
-/// Request sent by the client to check a submitted Pot Equity answer.
 #[derive(Deserialize)]
 pub struct PotEquityAnswerRequest {
     #[serde(rename = "problemId")]
     pub problem_id: Uuid,
-    pub decision: bool, // Player's action: call/fold
+    pub decision: bool
 }
 
-/// Response returned after checking a submitted Pot Equity answer.
 #[derive(Serialize)]
 pub struct PotEquityAnswerResponse {
     #[serde(rename = "userGuessIsCorrect")]
-    pub user_decision_is_correct: bool,    // Evaluates the user's submitted decision
+    pub user_decision_is_correct: bool,
     #[serde(rename = "expectedDecision")]
-    pub expected_decision: bool,           // The correct action (call/fold)
+    pub expected_decision: bool,
     #[serde(rename = "playerEquity")]
     pub player_equity: f32,
     #[serde(rename = "potOdds")]
-    pub pot_odds: f32,
+    pub pot_odds: f32
 }
 
-fn parse_num_players(params: &HashMap<String, String>) -> Result<usize, ApiError> {
-    let Some(raw) = params.get("numPlayers") else {
-        return Ok(2);
-    };
-    let parsed: usize = raw.parse().map_err(|_| ApiError::InvalidParameter {
-        name: "numPlayers",
-        detail: format!("expected a whole number, got {raw:?}"),
-    })?;
-    if !(2..=MAX_PLAYERS).contains(&parsed) {
-        return Err(ApiError::InvalidParameter {
-            name: "numPlayers",
-            detail: format!("must be between 2 and {MAX_PLAYERS}, got {parsed}"),
-        });
-    }
-    Ok(parsed)
-}
-
-/// Generates a new Pot Equity problem.
-///
-/// `streets` (optional): comma-separated list of allowed streets (default: pre-flop, flop, turn, river)
-/// `allowOverbets` (optional, default: true): whether to allow overbets in the problem
 pub async fn generate_pot_equity_problem(
     State(app_state): State<AppState>,
-    Query(params): Query<HashMap<String, String>>,
+    Query(params): Query<HashMap<String, String>>
 ) -> Result<Json<PotEquityProblemResponse>, ApiError> {
-    let num_players = parse_num_players(&params)?;
+    let num_players = params::num_players(&params)?;
 
-
-    let allowed_streets = params
-        .get("streets")
-        .map(|s| s.split(',').map(String::from).collect())
-        .unwrap_or_else(|| vec![
-            "pre-flop".to_string(),
-            "flop".to_string(),
-            "turn".to_string(),
-            "river".to_string(),
-        ]);
+    let allowed_streets = params::streets(&params, &["pre-flop", "flop", "turn"])?;
 
     let allow_overbets = params
         .get("allowOverbets")
-        .map_or(true, |v| v == "true");
+        .is_none_or(|v| v == "true");
 
     let problem = generate(
         allowed_streets,
         num_players,
         allow_overbets,
-        &app_state.seven_card_tables,
+        &app_state.seven_card_tables
     );
 
     let problem_id = Uuid::new_v4();
@@ -102,14 +68,13 @@ pub async fn generate_pot_equity_problem(
         board: problem.board,
         num_players,
         pot_size: problem.pot_size,
-        bet_to_call: problem.bet_to_call,
+        bet_to_call: problem.bet_to_call
     }))
 }
 
-/// Checks a submitted Pot Equity answer.
 pub async fn check_pot_equity_answer(
     State(app_state): State<AppState>,
-    Json(payload): Json<PotEquityAnswerRequest>,
+    Json(payload): Json<PotEquityAnswerRequest>
 ) -> Result<Json<PotEquityAnswerResponse>, ApiError> {
     let problem = app_state
         .pot_equity_cache
@@ -123,6 +88,6 @@ pub async fn check_pot_equity_answer(
         user_decision_is_correct,
         expected_decision: problem.correct_decision,
         player_equity: problem.player_equity,
-        pot_odds: problem.pot_odds,
+        pot_odds: problem.pot_odds
     }))
 }

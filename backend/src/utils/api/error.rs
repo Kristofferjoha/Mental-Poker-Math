@@ -1,7 +1,7 @@
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
+    Json
 };
 use serde::Serialize;
 use tracing::warn;
@@ -16,7 +16,7 @@ pub struct ApiErrorBody {
 #[derive(Debug)]
 pub enum ApiError {
     ProblemGone(Uuid),
-    InvalidParameter { name: &'static str, detail: String },
+    InvalidParameter { name: &'static str, detail: String }
 }
 
 impl IntoResponse for ApiError {
@@ -32,8 +32,8 @@ impl IntoResponse for ApiError {
                             "Problem {id} is no longer available. It may have expired, \
                              already been answered, or been lost to a server restart. \
                              Request a new problem."
-                        ),
-                    }),
+                        )
+                    })
                 )
                     .into_response()
             }
@@ -41,10 +41,10 @@ impl IntoResponse for ApiError {
                 StatusCode::BAD_REQUEST,
                 Json(ApiErrorBody {
                     error: "invalid_parameter",
-                    message: format!("Query parameter `{name}` is invalid: {detail}"),
-                }),
+                    message: format!("Query parameter `{name}` is invalid: {detail}")
+                })
             )
-                .into_response(),
+                .into_response()
         }
     }
 }

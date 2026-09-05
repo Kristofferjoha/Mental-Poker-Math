@@ -2,3 +2,4 @@ pub mod pot_equity;
 pub mod pure_equity;
 pub mod problem_helpers;
 pub mod whats_the_nuts;
+pub mod king_of_the_hill;

@@ -11,7 +11,7 @@ const BOARD_SIZE: usize = 5;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Equity {
     pub equities: Vec<f64>,
-    pub boards: u64,
+    pub boards: u64
 }
 
 impl Equity {
@@ -90,7 +90,7 @@ fn showdown(
     hole_keys: &[u32],
     board: &[usize; BOARD_SIZE],
     board_key: u32,
-    acc: &mut [f64],
+    acc: &mut [f64]
 ) {
     let mut ranks = [0u32; MAX_PLAYERS];
     for (seat, cards) in hole.iter().enumerate() {
@@ -118,12 +118,11 @@ fn binomial(n: usize, k: usize) -> u64 {
 fn unrank_combination(mut rank: u64, m: usize, out: &mut [usize]) {
     let k = out.len();
     let mut candidate = 0usize;
-    for slot in 0..k {
+    for (slot, cell) in out.iter_mut().enumerate() {
         loop {
-            // how many combinations start with `candidate` in this slot
             let branch = binomial(m - candidate - 1, k - slot - 1);
             if rank < branch {
-                out[slot] = candidate;
+                *cell = candidate;
                 candidate += 1;
                 break;
             }
@@ -171,7 +170,6 @@ pub fn calculate_equity(hands: &[&[Card]], board: &[Card], tables: &TableSeven) 
         .map(|h| [card_to_poker_eval_id(&h[0]), card_to_poker_eval_id(&h[1])])
         .collect();
 
-    // Each seat's two hole cards are fixed for the whole enumeration.
     let hole_keys: Vec<u32> = hole
         .iter()
         .map(|c| ctx.face_key[c[0]] + ctx.face_key[c[1]])
@@ -187,13 +185,12 @@ pub fn calculate_equity(hands: &[&[Card]], board: &[Card], tables: &TableSeven) 
     let dealt = board.len();
     let needed = BOARD_SIZE - dealt;
 
-    // A complete board is a single deterministic showdown.
     if needed == 0 {
         let mut acc = vec![0.0; seats];
         showdown(&ctx, &hole, &hole_keys, &known, known_key, &mut acc);
         return Equity {
             equities: acc,
-            boards: 1,
+            boards: 1
         };
     }
 
@@ -237,12 +234,12 @@ pub fn calculate_equity(hands: &[&[Card]], board: &[Card], tables: &TableSeven) 
                     *slot += value;
                 }
                 (a.0, a.1 + b.1)
-            },
+            }
         );
 
     Equity {
         equities: totals.iter().map(|w| w / boards as f64).collect(),
-        boards,
+        boards
     }
 }
 
@@ -256,7 +253,6 @@ mod tests {
         let tables = build_tables(false);
         let ctx = RankContext::new(&tables);
 
-        // deterministic LCG: no rng dependency, same sample on every run
         let mut state = 0x2545_F491_4F6C_DD1Du64;
         let mut next = || {
             state ^= state << 13;
@@ -269,7 +265,6 @@ mod tests {
         let mut flushes = 0u32;
 
         for _ in 0..200_000 {
-            // draw seven distinct cards
             let mut deck: u64 = (1 << 52) - 1;
             let mut cards = [0usize; 7];
             for slot in cards.iter_mut() {

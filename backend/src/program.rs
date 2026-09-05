@@ -8,10 +8,9 @@ use axum::http::{header, HeaderValue, Method};
 
 use crate::utils::{api, app_state::AppState};
 
-
 const DEFAULT_ALLOWED_ORIGINS: &[&str] = &[
     "https://mentalpokermath.com",
-    "https://www.mentalpokermath.com",
+    "https://www.mentalpokermath.com"
 ];
 
 pub fn is_localhost_origin(origin: &HeaderValue) -> bool {
@@ -74,17 +73,18 @@ pub fn allowed_origins() -> anyhow::Result<Vec<HeaderValue>> {
 
 pub fn build_router(app_state: AppState) -> Router {
     Router::new()
+        .route("/api/health", get(api::health))
         .route("/api/pot-equity-get-problem", get(api::generate_pot_equity_problem))
         .route("/api/pot-equity-check-answer", post(api::check_pot_equity_answer))
         .route("/api/pure-equity-get-problem", get(api::generate_pure_equity_problem))
         .route("/api/pure-equity-check-answer", post(api::check_pure_equity_answer))
         .route("/api/whats-the-nuts-get-problem", get(api::generate_nuts_problem))
         .route("/api/whats-the-nuts-check-answer", post(api::check_nuts_answer))
+        .route("/api/king-of-the-hill-get-problem", get(api::generate_king_of_the_hill_problem))
+        .route("/api/king-of-the-hill-check-answer", post(api::check_king_of_the_hill_answer))
         .with_state(app_state)
 }
 
-/// Main entrypoint for the Axum application.
-/// Sets up state, routes, and starts the HTTP server.
 pub async fn run() -> anyhow::Result<()> {
     dotenvy::dotenv().ok();
 
@@ -97,7 +97,6 @@ pub async fn run() -> anyhow::Result<()> {
     let seven_card_tables = Arc::new(seven_eval::build_tables(false));
     info!("Tables built successfully.");
 
-
     const CACHE_TTL: Duration = Duration::from_secs(60 * 60);
     const CACHE_MAX_CAPACITY: u64 = 50_000;
 
@@ -106,21 +105,27 @@ pub async fn run() -> anyhow::Result<()> {
             Cache::builder()
                 .time_to_live(CACHE_TTL)
                 .max_capacity(CACHE_MAX_CAPACITY)
-                .build(),
+                .build()
         ),
         pure_equity_cache: Arc::new(
             Cache::builder()
                 .time_to_live(CACHE_TTL)
                 .max_capacity(CACHE_MAX_CAPACITY)
-                .build(),
+                .build()
         ),
         nuts_cache: Arc::new(
             Cache::builder()
                 .time_to_live(CACHE_TTL)
                 .max_capacity(CACHE_MAX_CAPACITY)
-                .build(),
+                .build()
         ),
-        seven_card_tables: Arc::clone(&seven_card_tables),
+        koth_cache: Arc::new(
+            Cache::builder()
+                .time_to_live(CACHE_TTL)
+                .max_capacity(CACHE_MAX_CAPACITY)
+                .build()
+        ),
+        seven_card_tables: Arc::clone(&seven_card_tables)
     };
 
     let origins = allowed_origins()?;

@@ -1,9 +1,3 @@
-//! "King of the Hill" -- rank 4-6 hands by equity, highest first.
-//!
-//! Scoring is pairwise agreement with the true order (Kendall's tau), so a
-//! near-miss still earns credit. See [`score`] for why the raw ratio alone is a
-//! misleading number to show a player.
-
 use poker_eval::eval::seven::TableSeven;
 use rand::prelude::IndexedRandom;
 use rand::rng;
@@ -15,17 +9,6 @@ use crate::problems::problem_helpers::{draw_board, Street};
 pub const MIN_HANDS: usize = 4;
 pub const MAX_HANDS: usize = 6;
 
-/// Equities closer together than this are the same hand strength.
-///
-/// Comparing exactly is wrong. Two hands can be mathematically identical and
-/// still differ in the last bits of an `f64`: 2d8d and 2h8h are the same hand
-/// against a table that is unchanged by swapping those two suits, but the
-/// enumeration accumulates their wins in a different order. Measured, that pair
-/// comes back exactly equal at two hands and at four, and *unequal* with a lone
-/// AsKs alongside -- same value to ten decimal places, different f64.
-///
-/// The threshold sits far below the smallest real difference there can be, which
-/// is a single board out of the millions enumerated.
 const TIE_EPSILON: f64 = 1e-9;
 
 fn tied(a: f64, b: f64) -> bool {
@@ -35,34 +18,18 @@ fn tied(a: f64, b: f64) -> bool {
 #[derive(Clone, Debug)]
 pub struct KingOfHillProblem {
     pub board: Vec<Card>,
-    /// Presented unordered; the player supplies the ranking.
     pub hands: Vec<Vec<Card>>,
-    /// Exact equity per hand, in the same index space as `hands`.
     pub equities: Vec<f64>,
-    /// Indices of `hands`, strongest first.
-    pub correct_order: Vec<usize>,
+    pub correct_order: Vec<usize>
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Score {
     pub correct_pairs: usize,
     pub total_pairs: usize,
-    /// Pairwise agreement rescaled so chance sits at zero: +1 perfect, 0 random,
-    /// -1 exactly backwards.
-    pub kendall_tau: f64,
+    pub kendall_tau: f64
 }
 
-/// Scores a submitted order against the true equities.
-///
-/// The raw ratio `correct_pairs / total_pairs` is kept because it is what the
-/// reveal shows, but it is a poor *score*: any pair is either right or wrong, so
-/// a random ordering averages exactly 0.5 regardless of hand count. That makes
-/// the bottom half of the range unreachable by anyone genuinely trying, and
-/// reports "50%" to a player who knew nothing. Kendall's tau is the same count
-/// rescaled to put chance at zero.
-///
-/// Hands with equal equity are counted as agreeing in either order -- with ties
-/// there is no wrong answer to give.
 pub fn score(guess: &[usize], equities: &[f64]) -> Score {
     let n = equities.len();
     let mut position = vec![0usize; n];
@@ -78,7 +45,6 @@ pub fn score(guess: &[usize], equities: &[f64]) -> Score {
             let agrees = if tied(equities[a], equities[b]) {
                 true
             } else {
-                // the player ranked `a` above `b` exactly when it is stronger
                 (position[a] < position[b]) == (equities[a] > equities[b])
             };
             if agrees {
@@ -96,14 +62,14 @@ pub fn score(guess: &[usize], equities: &[f64]) -> Score {
     Score {
         correct_pairs,
         total_pairs,
-        kendall_tau: 2.0 * ratio - 1.0,
+        kendall_tau: 2.0 * ratio - 1.0
     }
 }
 
 pub fn generate(
     num_hands: usize,
     allowed_streets_str: Vec<String>,
-    tables: &TableSeven,
+    tables: &TableSeven
 ) -> KingOfHillProblem {
     debug_assert!((MIN_HANDS..=MAX_HANDS).contains(&num_hands));
 
@@ -113,14 +79,8 @@ pub fn generate(
 
     let mut allowed_streets: Vec<Street> = allowed_streets_str
         .iter()
-        .filter_map(|s| Street::from_str(s))
+        .filter_map(|s| s.parse().ok())
         .collect();
-    // The river is not offered: with a finished board there are only two
-    // equities on the table -- the winner's 100% and everyone else's 0% -- so
-    // two thirds of the pairs are ties that agree whichever way round they go.
-    // Measured over 400 six-hand spots, a random shuffle scored tau +0.63 there
-    // against +0.01 on the flop, where chance is meant to sit. The question
-    // collapses to "who won", and the ranking is free.
     allowed_streets.retain(|s| *s != Street::River);
     if allowed_streets.is_empty() {
         allowed_streets = vec![Street::PreFlop, Street::Flop, Street::Turn];
@@ -135,7 +95,6 @@ pub fn generate(
     let seats: Vec<&[Card]> = hands.iter().map(|h| h.as_slice()).collect();
     let equities = calculate_equity(&seats, &board, tables).equities;
 
-    // strongest first; ties keep their dealt order, which is arbitrary anyway
     let mut correct_order: Vec<usize> = (0..num_hands).collect();
     correct_order.sort_by(|&a, &b| {
         equities[b]
@@ -147,6 +106,6 @@ pub fn generate(
         board,
         hands,
         equities,
-        correct_order,
+        correct_order
     }
 }

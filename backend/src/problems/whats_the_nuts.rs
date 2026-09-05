@@ -57,7 +57,7 @@ impl Difficulty {
             Difficulty::Easy => [0.02, 0.12, 0.60]
                 .iter()
                 .map(|f| ((available as f64 * f).round() as usize).max(1))
-                .collect(),
+                .collect()
         };
 
         let mut chosen: Vec<usize> = Vec::new();
@@ -151,7 +151,7 @@ fn holdings_by_rank(board: &[Card], tables: &TableSeven) -> Vec<(u32, [usize; 2]
         for &second in &live[i + 1..] {
             ranked.push((
                 get_rank(tables, [first, second, b[0], b[1], b[2], b[3], b[4]]),
-                [first, second],
+                [first, second]
             ));
         }
     }
@@ -178,7 +178,7 @@ pub fn generate(difficulty: Difficulty, tables: &TableSeven) -> NutsProblem {
         let texture_ok = match texture {
             Some(t) => has_texture(t, &candidate),
             None if difficulty == Difficulty::Easy => max_suited(&candidate) <= target,
-            None => max_suited(&candidate) == target,
+            None => max_suited(&candidate) == target
         };
 
         if texture_ok || attempt == 499 {

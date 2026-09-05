@@ -1,1 +1,1 @@
-# poker-math-quiz-game
+https://arithmetic.zetamac.com/

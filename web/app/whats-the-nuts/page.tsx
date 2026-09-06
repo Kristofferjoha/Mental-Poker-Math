@@ -26,6 +26,7 @@ export default function WhatsTheNutsPage() {
   const { state, record } = session;
 
   const hold = useRef<number | undefined>(undefined);
+  const answered = useRef<string | null>(null);
   useEffect(() => () => window.clearTimeout(hold.current), []);
 
   const { problem, advance } = useProblemQueue({
@@ -33,6 +34,7 @@ export default function WhatsTheNutsPage() {
     active: state === 'playing',
     onError: setError,
     onAdvance: () => {
+      answered.current = null;
       setAnswer(null);
       setPicked(null);
       setBusy(false);
@@ -45,7 +47,8 @@ export default function WhatsTheNutsPage() {
 
   const submit = useCallback(
     async (index: number) => {
-      if (!problem || answer || busy) return;
+      if (!problem || answered.current === problem.problem_id) return;
+      answered.current = problem.problem_id;
       setBusy(true);
       setPicked(index);
       try {
@@ -62,22 +65,27 @@ export default function WhatsTheNutsPage() {
           yours: result.correct ? 'correct' : 'wrong'
         });
       } catch (e) {
+        if (e instanceof ApiError && e.isGone) {
+          void advance();
+          return;
+        }
         setError(e instanceof ApiError ? e.message : String(e));
+        answered.current = null;
+        setPicked(null);
         setBusy(false);
       }
     },
-    [problem, answer, busy, record, advance]
+    [problem, record, advance]
   );
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (answer) return;
       const n = Number.parseInt(e.key, 10);
       if (problem && n >= 1 && n <= problem.candidates.length) void submit(n - 1);
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [problem, answer, submit]);
+  }, [problem, submit]);
 
   return (
     <ModeShell

@@ -23,6 +23,7 @@ export default function KingOfTheHillPage() {
 
   const [verdict, setVerdict] = useState<boolean[] | null>(null);
   const hold = useRef<number | undefined>(undefined);
+  const answered = useRef<string | null>(null);
   useEffect(() => () => window.clearTimeout(hold.current), []);
 
   const [duration, setDuration] = useState<Duration>(DEFAULT_DURATION);
@@ -45,7 +46,12 @@ export default function KingOfTheHillPage() {
     fetch: fetchOne,
     active: state === 'playing',
     onError: setError,
-    onAdvance: () => setRanking([])
+    onAdvance: () => {
+      answered.current = null;
+      setRanking([]);
+      setVerdict(null);
+      setBusy(false);
+    }
   });
 
   useEffect(() => {
@@ -61,8 +67,9 @@ export default function KingOfTheHillPage() {
   }, []);
 
   const submit = useCallback(async () => {
-    if (!problem || busy) return;
-    if (ranking.length !== problem.hands.length) return;
+    if (!problem || ranking.length !== problem.hands.length) return;
+    if (answered.current === problem.problem_id) return;
+    answered.current = problem.problem_id;
     setBusy(true);
     try {
       const result = await api.kingOfTheHill.check(problem.problem_id, ranking);
@@ -80,16 +87,17 @@ export default function KingOfTheHillPage() {
         handMarks: result.correctOrder.map((i) => placed[i])
       });
       setVerdict(placed);
-      hold.current = window.setTimeout(() => {
-        setVerdict(null);
-        setBusy(false);
-        void advance();
-      }, VERDICT_MS);
+      hold.current = window.setTimeout(() => void advance(), VERDICT_MS);
     } catch (e) {
+      if (e instanceof ApiError && e.isGone) {
+        void advance();
+        return;
+      }
       setError(e instanceof ApiError ? e.message : String(e));
+      answered.current = null;
       setBusy(false);
     }
-  }, [problem, busy, ranking, record, advance]);
+  }, [problem, ranking, record, advance]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

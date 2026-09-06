@@ -23,6 +23,7 @@ export default function PotOddsPage() {
     null
   );
   const hold = useRef<number | undefined>(undefined);
+  const answered = useRef<string | null>(null);
   useEffect(() => () => window.clearTimeout(hold.current), []);
 
   const [duration, setDuration] = useState<Duration>(DEFAULT_DURATION);
@@ -44,7 +45,12 @@ export default function PotOddsPage() {
   const { problem, advance } = useProblemQueue({
     fetch: fetchOne,
     active: state === 'playing',
-    onError: setError
+    onError: setError,
+    onAdvance: () => {
+      answered.current = null;
+      setVerdict(null);
+      setBusy(false);
+    }
   });
 
   useEffect(() => {
@@ -55,7 +61,8 @@ export default function PotOddsPage() {
 
   const decide = useCallback(
     async (call: boolean) => {
-      if (!problem || busy) return;
+      if (!problem || answered.current === problem.problem_id) return;
+      answered.current = problem.problem_id;
       setBusy(true);
       try {
         const result = await api.potEquity.check(problem.problem_id, call);
@@ -82,17 +89,18 @@ export default function PotOddsPage() {
           correct: result.userGuessIsCorrect,
           expected: result.expectedDecision
         });
-        hold.current = window.setTimeout(() => {
-          setVerdict(null);
-          setBusy(false);
-          void advance();
-        }, VERDICT_MS);
+        hold.current = window.setTimeout(() => void advance(), VERDICT_MS);
       } catch (e) {
+        if (e instanceof ApiError && e.isGone) {
+          void advance();
+          return;
+        }
         setError(e instanceof ApiError ? e.message : String(e));
+        answered.current = null;
         setBusy(false);
       }
     },
-    [problem, busy, record, advance]
+    [problem, record, advance]
   );
 
   useEffect(() => {

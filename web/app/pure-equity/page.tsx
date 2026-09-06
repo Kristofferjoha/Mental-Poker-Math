@@ -49,17 +49,17 @@ export default function PureEquityPage() {
     onAdvance: () => setGuess('')
   });
 
-  const cleared = useRef<string | null>(null);
+  const answered = useRef<string | null>(null);
 
   function onGuess(text: string) {
     const next = clean(text);
     setGuess(next);
 
-    if (!problem || next === '' || problem.problem_id === cleared.current) return;
+    if (!problem || next === '' || problem.problem_id === answered.current) return;
     const value = Number.parseFloat(next);
     if (!(value >= problem.lower_bound && value <= problem.upper_bound)) return;
 
-    cleared.current = problem.problem_id;
+    answered.current = problem.problem_id;
     record({
       correct: true,
       hands: problem.hands,

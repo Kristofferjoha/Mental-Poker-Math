@@ -1,3 +1,12 @@
+.reserve {
+  height: var(--table-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reserve .dealing { padding: 0; }
+
 .dealing {
   margin: 0;
   padding: 3.5rem 0;
@@ -13,4 +22,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dealing { animation: none; opacity: 0.7; }
+}
+
+@media (max-width: 760px) {
+  .reserve { height: auto; padding: 3.5rem 0; }
 }

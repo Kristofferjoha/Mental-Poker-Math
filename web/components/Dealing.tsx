@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import styles from './Dealing.module.css';
 
-export function Dealing() {
+/** Placeholder while the next problem is in flight.
+ *  `reserve` holds the table's footprint so nothing below it moves when the deal lands. */
+export function Dealing({ reserve = false }: { reserve?: boolean }) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -11,6 +13,11 @@ export function Dealing() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  if (!show) return null;
-  return <p className={`label ${styles.dealing}`}>dealing</p>;
+  if (!reserve) return show ? <p className={`label ${styles.dealing}`}>dealing</p> : null;
+
+  return (
+    <div className={styles.reserve}>
+      {show && <p className={`label ${styles.dealing}`}>dealing</p>}
+    </div>
+  );
 }

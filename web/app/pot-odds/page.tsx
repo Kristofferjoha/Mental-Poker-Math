@@ -161,7 +161,7 @@ export default function PotOddsPage() {
               toCall={problem.bet_to_call}
             />
           ) : (
-            <Dealing />
+            <Dealing reserve />
           )}
 
           <div className={styles.actions}>

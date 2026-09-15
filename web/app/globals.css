@@ -36,6 +36,9 @@
 
   --gap:  1rem;
   --rule: 1px solid var(--line);
+
+
+  --table-height: 400px;
 }
 
 * { box-sizing: border-box; }

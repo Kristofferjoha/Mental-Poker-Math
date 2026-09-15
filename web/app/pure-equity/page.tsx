@@ -124,7 +124,7 @@ export default function PureEquityPage() {
         blurb={`Estimate your share of the pot. Get within ±${tolerance}% and the next hand deals.`}
       >
         <div className={styles.spot}>
-          {problem ? <Table hands={problem.hands} board={problem.board} /> : <Dealing />}
+          {problem ? <Table hands={problem.hands} board={problem.board} /> : <Dealing reserve />}
 
           <div className={styles.answerArea}>
             <input
